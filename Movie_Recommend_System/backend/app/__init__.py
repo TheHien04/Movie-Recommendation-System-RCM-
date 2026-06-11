@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 from flask_cors import CORS
 
@@ -10,7 +12,10 @@ from app.middleware.request_context import register_request_hooks
 def create_app():
   configure_logging(settings.ENV)
   app = Flask(__name__)
-  CORS(app, resources={r"/*": {"origins": settings.CORS_ORIGINS}}, supports_credentials=True)
+  if os.getenv("ALLOW_ALL_CORS", "").lower() in ("1", "true", "yes"):
+    CORS(app, resources={r"/*": {"origins": "*"}})
+  else:
+    CORS(app, resources={r"/*": {"origins": settings.CORS_ORIGINS}}, supports_credentials=True)
 
   if settings.SENTRY_DSN:
     try:

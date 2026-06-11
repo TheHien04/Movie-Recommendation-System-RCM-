@@ -25,7 +25,7 @@ jobs:
         env:
           # Repo name ends with a dash: Movie-Recommendation-System-RCM-
           VITE_BASE_PATH: /Movie-Recommendation-System-RCM-/
-          VITE_API_URL: https://cinemate-rcm-api.onrender.com
+          VITE_API_URL: https://cinemate-live.onrender.com
         run: |
           npm ci
           npm run build

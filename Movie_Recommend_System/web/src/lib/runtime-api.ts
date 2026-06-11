@@ -1,4 +1,5 @@
-const DEFAULT_LIVE_API = 'https://cinemate-rcm-api.onrender.com'
+/** Live API — unified Render service (web + API same host) */
+export const DEFAULT_LIVE_API = 'https://cinemate-live.onrender.com'
 
 declare global {
   interface Window {
@@ -14,12 +15,29 @@ export function getApiBase(): string {
     resolved = window.__CINEMATE_API__
     return resolved
   }
+
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname
+    // Unified Render deploy: API is same origin
+    if (host === 'cinemate-live.onrender.com') {
+      resolved = window.location.origin
+      return resolved
+    }
+    // GitHub Pages / other hosts → call unified API
+    if (host.endsWith('.github.io') || host.endsWith('.onrender.com')) {
+      resolved = DEFAULT_LIVE_API
+      return resolved
+    }
+  }
+
   const fromEnv = (import.meta.env.VITE_API_URL as string | undefined)?.trim()
   if (fromEnv) {
     resolved = fromEnv.replace(/\/$/, '')
     return resolved
   }
+
   if (import.meta.env.DEV) return ''
+
   resolved = DEFAULT_LIVE_API
   return resolved
 }
@@ -38,16 +56,7 @@ export async function initRuntimeApi(): Promise<string> {
       }
     }
   } catch {
-    // fall through
-  }
-
-  if (typeof window !== 'undefined') {
-    const host = window.location.hostname
-    if (host.endsWith('.onrender.com') || host.endsWith('.github.io') || host === 'localhost') {
-      resolved = DEFAULT_LIVE_API
-      window.__CINEMATE_API__ = resolved
-      return resolved
-    }
+    // ignore
   }
 
   resolved = getApiBase()

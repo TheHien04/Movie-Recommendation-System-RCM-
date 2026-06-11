@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "=== Install Python dependencies ==="
+echo "=== Python deps (lean, no torch) ==="
 pip install --upgrade pip
-pip install flask flask-cors flask-sqlalchemy pandas numpy scipy scikit-learn joblib requests python-dotenv openai PyJWT gunicorn sentence-transformers torch sentry-sdk
+pip install -r requirements-prod.txt
 
-echo "=== Build React frontend (same-origin API) ==="
+echo "=== Build React (same-origin API) ==="
 cd Movie_Recommend_System/web
 npm ci
 VITE_API_URL= npm run build
+cp dist/index.html dist/404.html
+touch dist/.nojekyll
 
 echo "=== Verify ML artifacts ==="
 cd ../backend
-if [ ! -f artifacts/v1/manifest.json ]; then
-  python scripts/train_models.py
-fi
-echo "Build complete — Flask will serve web/dist + API"
+test -f artifacts/v1/manifest.json
+echo "Unified build OK"

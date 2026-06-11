@@ -1,35 +1,34 @@
-# API:  https://cinemate-rcm-api.onrender.com  (Docker, lean)
-# Web:  https://cinemate-web.onrender.com        (static backup)
-# Web:  https://thehien04.github.io/Movie-Recommendation-System-RCM-/  (GitHub Pages — enable in Settings)
+# ONE service: web + API on the same URL (most reliable on Render free tier)
+# Live app: https://cinemate-live.onrender.com
+#
+# Delete old broken services (cinemate-rcm-api, cinemate-api) then Manual Sync.
 
 services:
   - type: web
-    name: cinemate-rcm-api
-    runtime: docker
+    name: cinemate-live
+    runtime: python
     plan: free
-    dockerfilePath: ./Dockerfile
+    buildCommand: bash deploy/render-build-unified.sh
+    startCommand: cd Movie_Recommend_System/backend && gunicorn -b 0.0.0.0:$PORT -w 1 --threads 2 --timeout 180 app:app
     healthCheckPath: /api/health/live
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: NODE_VERSION
+        value: "22.16.0"
       - key: FLASK_ENV
         value: production
+      - key: ALLOW_ALL_CORS
+        value: "true"
       - key: SECRET_KEY
         generateValue: true
       - key: ADMIN_API_KEY
         generateValue: true
-      - key: CORS_ORIGINS
-        value: https://thehien04.github.io,https://cinemate-web.onrender.com,http://localhost:5173
+      - key: FRONTEND_URL
+        value: https://cinemate-live.onrender.com
       - key: TMDB_API_KEY
         sync: false
       - key: OPENAI_API_KEY
         sync: false
       - key: DATABASE_URL
         sync: false
-
-  - type: web
-    name: cinemate-web
-    runtime: static
-    buildCommand: bash deploy/render-build-web-static.sh
-    staticPublishPath: Movie_Recommend_System/web/dist
-    envVars:
-      - key: NODE_VERSION
-        value: "22.16.0"
