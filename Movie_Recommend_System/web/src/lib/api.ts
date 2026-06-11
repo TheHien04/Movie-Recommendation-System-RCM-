@@ -44,17 +44,32 @@ export type MovieDetails = {
   affiliate_search?: string
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders(),
-      ...(init?.headers || {}),
-    },
-  })
-  if (!res.ok) throw new Error(`Request failed: ${res.status}`)
-  return res.json()
+async function request<T>(path: string, init?: RequestInit, attempt = 0): Promise<T> {
+  const controller = new AbortController()
+  const timeoutMs =
+    typeof window !== 'undefined' && window.location.hostname.endsWith('.onrender.com') ? 90_000 : 30_000
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders(),
+        ...(init?.headers || {}),
+      },
+    })
+    if (!res.ok) throw new Error(`Request failed: ${res.status}`)
+    return res.json()
+  } catch (err) {
+    if (attempt < 1 && typeof window !== 'undefined' && window.location.hostname.endsWith('.onrender.com')) {
+      await new Promise((r) => setTimeout(r, 3000))
+      return request<T>(path, init, attempt + 1)
+    }
+    throw err
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 export const fetchRandomMovies = () => request<{ movies: MovieSummary[] }>('/random_movies').then((d) => d.movies)

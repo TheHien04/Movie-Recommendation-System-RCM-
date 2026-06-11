@@ -1,19 +1,53 @@
 import { useEffect, useState } from 'react'
-import { fetchHealth } from '../lib/api'
+import { API_BASE, RENDER_LIVE_API } from '../lib/config'
+
+async function checkHealth(): Promise<boolean> {
+  const base =
+    typeof window !== 'undefined' && window.location.hostname.endsWith('.onrender.com')
+      ? RENDER_LIVE_API
+      : API_BASE
+
+  const url = `${base}/api/health/live`
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 90_000)
+  try {
+    const res = await fetch(url, { signal: controller.signal })
+    return res.ok
+  } finally {
+    clearTimeout(timer)
+  }
+}
 
 export function BackendStatus() {
   const [online, setOnline] = useState<boolean | null>(null)
+  const [waking, setWaking] = useState(false)
 
   useEffect(() => {
-    const check = () => {
-      fetchHealth()
-        .then(() => setOnline(true))
-        .catch(() => setOnline(false))
+    let cancelled = false
+    async function poll() {
+      setWaking(true)
+      const ok = await checkHealth().catch(() => false)
+      if (!cancelled) {
+        setOnline(ok)
+        setWaking(false)
+      }
     }
-    check()
-    const timer = setInterval(check, 15000)
-    return () => clearInterval(timer)
+    void poll()
+    const timer = setInterval(() => void poll(), 30_000)
+    return () => {
+      cancelled = true
+      clearInterval(timer)
+    }
   }, [])
+
+  if (online === null && waking) {
+    return (
+      <span className="hidden items-center gap-2 rounded-full bg-amber-500/15 px-3 py-1 text-xs text-amber-200 md:inline-flex">
+        <span className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />
+        Waking API…
+      </span>
+    )
+  }
 
   if (online === null) return null
 

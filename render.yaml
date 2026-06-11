@@ -1,34 +1,38 @@
-# One-click deploy — SINGLE service (web + API same URL, no CORS issues)
-# Live app: https://cinemate-web.onrender.com
+# Deploy: Render → Blueprints → Cinemate → Manual sync
+# App URL:  https://cinemate-web.onrender.com
+# API URL:  https://cinemate-rcm-api.onrender.com
 
 services:
   - type: web
-    name: cinemate-web
+    name: cinemate-rcm-api
     runtime: python
     plan: free
-    buildCommand: bash deploy/render-build-unified.sh
+    buildCommand: bash deploy/render-build-api-lean.sh
     startCommand: cd Movie_Recommend_System/backend && gunicorn -b 0.0.0.0:$PORT -w 1 --timeout 180 app:app
     healthCheckPath: /api/health/live
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"
-      - key: NODE_VERSION
-        value: "22.16.0"
       - key: FLASK_ENV
         value: production
       - key: SECRET_KEY
         generateValue: true
       - key: ADMIN_API_KEY
         generateValue: true
-      - key: FRONTEND_URL
-        value: https://cinemate-web.onrender.com
       - key: CORS_ORIGINS
-        value: https://cinemate-web.onrender.com
+        value: https://cinemate-web.onrender.com,https://cinemate-web.onrender.com/,http://localhost:5173
       - key: TMDB_API_KEY
         sync: false
       - key: OPENAI_API_KEY
         sync: false
       - key: DATABASE_URL
         sync: false
-      - key: SENTRY_DSN
-        sync: false
+
+  - type: web
+    name: cinemate-web
+    runtime: static
+    buildCommand: bash deploy/render-build-web-static.sh
+    staticPublishPath: Movie_Recommend_System/web/dist
+    envVars:
+      - key: NODE_VERSION
+        value: "22.16.0"

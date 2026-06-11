@@ -1,24 +1,18 @@
-/**
- * API base URL.
- * - Local dev: empty → Vite proxy to :5001
- * - Render unified deploy: empty → same origin (Flask serves web + API)
- */
+/** Live Render API — must match render.yaml service name cinemate-rcm-api */
+export const RENDER_LIVE_API = 'https://cinemate-rcm-api.onrender.com'
+
 function resolveApiBase(): string {
-  const fromEnv = (import.meta.env.VITE_API_URL as string | undefined)?.trim()
-  if (fromEnv) {
-    const base = fromEnv.replace(/\/$/, '')
-    // Ignore stale builds pointing at old/broken API hosts
-    if (base.includes('cinemate-api.onrender.com')) {
-      return typeof window !== 'undefined' ? window.location.origin : ''
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname
+    // Any Render frontend → always use dedicated API service (static site has no /api routes)
+    if (host.endsWith('.onrender.com')) {
+      return RENDER_LIVE_API
     }
-    return base
   }
 
-  if (import.meta.env.PROD && typeof window !== 'undefined') {
-    if (window.location.hostname.endsWith('.onrender.com')) {
-      return window.location.origin
-    }
-  }
+  const fromEnv = (import.meta.env.VITE_API_URL as string | undefined)?.trim()
+  if (fromEnv) return fromEnv.replace(/\/$/, '')
+
   return ''
 }
 
