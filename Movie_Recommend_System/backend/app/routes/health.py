@@ -1,5 +1,3 @@
-import os
-
 from flask import Blueprint, jsonify
 from sqlalchemy import text
 
@@ -9,19 +7,6 @@ from app.database import db
 from app.ml import artifacts as artifact_store
 
 health_bp = Blueprint("health", __name__)
-
-
-@health_bp.route("/", methods=["GET"])
-def root():
-  frontend = os.getenv("FRONTEND_URL", "http://localhost:5173")
-  return jsonify({
-    "service": "Cinemate API",
-    "status": "running",
-    "frontend": frontend,
-    "health": "/api/health",
-    "docs": "/api/docs",
-    "message": "API is live — open the frontend URL in your browser for the full app.",
-  })
 
 
 @health_bp.route("/api/health", methods=["GET"])

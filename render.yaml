@@ -1,22 +1,19 @@
-# One-click deploy: Render Dashboard → New → Blueprint → connect this repo
-# Live URLs (after deploy):
-#   Web:  https://cinemate-web.onrender.com
-#   API:  https://movie-rcm-api.onrender.com
-#
-# If you had an OLD service named cinemate-api, delete it in Render Dashboard
-# (it returns {"message":"Welcome to the Backend"} and breaks the app).
+# One-click deploy — SINGLE service (web + API same URL, no CORS issues)
+# Live app: https://cinemate-web.onrender.com
 
 services:
   - type: web
-    name: movie-rcm-api
+    name: cinemate-web
     runtime: python
     plan: free
-    buildCommand: bash deploy/render-build-api.sh
-    startCommand: cd Movie_Recommend_System/backend && gunicorn -b 0.0.0.0:$PORT -w 2 --timeout 120 app:app
-    healthCheckPath: /api/health/ready
+    buildCommand: bash deploy/render-build-unified.sh
+    startCommand: cd Movie_Recommend_System/backend && gunicorn -b 0.0.0.0:$PORT -w 1 --timeout 180 app:app
+    healthCheckPath: /api/health/live
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"
+      - key: NODE_VERSION
+        value: "22.16.0"
       - key: FLASK_ENV
         value: production
       - key: SECRET_KEY
@@ -26,7 +23,7 @@ services:
       - key: FRONTEND_URL
         value: https://cinemate-web.onrender.com
       - key: CORS_ORIGINS
-        value: https://cinemate-web.onrender.com,https://cinemate-web.onrender.com/
+        value: https://cinemate-web.onrender.com
       - key: TMDB_API_KEY
         sync: false
       - key: OPENAI_API_KEY
@@ -35,15 +32,3 @@ services:
         sync: false
       - key: SENTRY_DSN
         sync: false
-
-  - type: web
-    name: cinemate-web
-    runtime: static
-    buildCommand: bash deploy/render-build-web.sh
-    staticPublishPath: Movie_Recommend_System/web/dist
-    envVars:
-      - key: CINEMATE_API_HOST
-        fromService:
-          type: web
-          name: movie-rcm-api
-          property: host
