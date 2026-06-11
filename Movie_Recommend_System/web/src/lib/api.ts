@@ -1,5 +1,5 @@
 import { authHeaders } from './auth'
-import { API_BASE } from './config'
+import { getApiBase } from './config'
 
 export type MovieSummary = {
   title: string
@@ -50,7 +50,7 @@ async function request<T>(path: string, init?: RequestInit, attempt = 0): Promis
     typeof window !== 'undefined' && window.location.hostname.endsWith('.onrender.com') ? 90_000 : 30_000
   const timer = setTimeout(() => controller.abort(), timeoutMs)
   try {
-    const res = await fetch(`${API_BASE}${path}`, {
+    const res = await fetch(`${getApiBase()}${path}`, {
       ...init,
       signal: controller.signal,
       headers: {
@@ -131,7 +131,7 @@ export const fetchLeaderboard = (genre?: string) => {
 }
 
 export async function fetchAdminDashboard(adminKey: string) {
-  const res = await fetch(`${API_BASE}/api/admin/dashboard`, {
+  const res = await fetch(`${getApiBase()}/api/admin/dashboard`, {
     headers: { 'X-Admin-Key': adminKey },
   })
   if (!res.ok) throw new Error('Admin request failed')

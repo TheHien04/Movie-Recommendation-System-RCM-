@@ -1,24 +1,19 @@
 FROM python:3.11-slim
 
-RUN useradd --create-home --shell /bin/bash cinemate
 WORKDIR /app
-
-COPY requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
+COPY requirements-prod.txt /tmp/requirements-prod.txt
+RUN pip install --no-cache-dir -r /tmp/requirements-prod.txt
 
 COPY Movie_Recommend_System /movie_system
 WORKDIR /movie_system/backend
 ENV PYTHONPATH=/movie_system/backend
-ENV PORT=5001
 ENV FLASK_ENV=production
 
-RUN python scripts/train_models.py
+# Artifacts are committed — skip heavy offline training in container build
+RUN test -f artifacts/v1/manifest.json
 
-RUN chown -R cinemate:cinemate /movie_system
-USER cinemate
+EXPOSE 10000
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=5 \
+  CMD python -c "import os,urllib.request; urllib.request.urlopen(f'http://127.0.0.1:{os.environ.get(\"PORT\",\"10000\")}/api/health/live')"
 
-EXPOSE 5001
-HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5001/api/health/live')"
-
-CMD ["gunicorn", "-b", "0.0.0.0:5001", "-w", "2", "--timeout", "120", "app:app"]
+CMD ["sh", "-c", "gunicorn -b 0.0.0.0:${PORT:-10000} -w 1 --timeout 180 app:app"]

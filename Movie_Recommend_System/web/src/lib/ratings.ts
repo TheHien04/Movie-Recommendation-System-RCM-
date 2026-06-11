@@ -1,5 +1,5 @@
 import { authHeaders } from './auth'
-import { API_BASE } from './config'
+import { getApiBase } from './config'
 
 const KEY = 'cinemate_ratings'
 
@@ -36,7 +36,7 @@ export async function setMovieRating(title: string, rating: number): Promise<voi
   const token = authHeaders().Authorization
   if (!token) return
 
-  await fetch(`${API_BASE}/api/users/ratings`, {
+  await fetch(`${getApiBase()}/api/users/ratings`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify({ movie_title: title, rating }),
@@ -46,7 +46,7 @@ export async function setMovieRating(title: string, rating: number): Promise<voi
 export async function syncRatingsFromCloud(): Promise<void> {
   const token = authHeaders().Authorization
   if (!token) return
-  const res = await fetch(`${API_BASE}/api/users/ratings`, { headers: authHeaders() })
+  const res = await fetch(`${getApiBase()}/api/users/ratings`, { headers: authHeaders() })
   if (!res.ok) return
   const data = (await res.json()) as { ratings: { movie_title: string; rating: number }[] }
   const map = readLocal()

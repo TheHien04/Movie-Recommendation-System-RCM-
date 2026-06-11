@@ -1,18 +1,15 @@
-# Deploy: Render → Blueprints → Cinemate → Manual sync
-# App URL:  https://cinemate-web.onrender.com
-# API URL:  https://cinemate-rcm-api.onrender.com
+# API on Render (Docker, lean). Frontend on GitHub Pages (auto via CI).
+# App:  https://thehien04.github.io/Movie-Recommendation-System-RCM-/
+# API:  https://cinemate-rcm-api.onrender.com
 
 services:
   - type: web
     name: cinemate-rcm-api
-    runtime: python
+    runtime: docker
     plan: free
-    buildCommand: bash deploy/render-build-api-lean.sh
-    startCommand: cd Movie_Recommend_System/backend && gunicorn -b 0.0.0.0:$PORT -w 1 --timeout 180 app:app
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /api/health/live
     envVars:
-      - key: PYTHON_VERSION
-        value: "3.11.9"
       - key: FLASK_ENV
         value: production
       - key: SECRET_KEY
@@ -20,19 +17,10 @@ services:
       - key: ADMIN_API_KEY
         generateValue: true
       - key: CORS_ORIGINS
-        value: https://cinemate-web.onrender.com,https://cinemate-web.onrender.com/,http://localhost:5173
+        value: https://thehien04.github.io,https://cinemate-web.onrender.com,http://localhost:5173
       - key: TMDB_API_KEY
         sync: false
       - key: OPENAI_API_KEY
         sync: false
       - key: DATABASE_URL
         sync: false
-
-  - type: web
-    name: cinemate-web
-    runtime: static
-    buildCommand: bash deploy/render-build-web-static.sh
-    staticPublishPath: Movie_Recommend_System/web/dist
-    envVars:
-      - key: NODE_VERSION
-        value: "22.16.0"

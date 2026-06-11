@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react'
-import { API_BASE, RENDER_LIVE_API } from '../lib/config'
+import { getApiBase } from '../lib/config'
 
 async function checkHealth(): Promise<boolean> {
-  const base =
-    typeof window !== 'undefined' && window.location.hostname.endsWith('.onrender.com')
-      ? RENDER_LIVE_API
-      : API_BASE
+  const base = getApiBase()
 
   const url = `${base}/api/health/live`
   const controller = new AbortController()

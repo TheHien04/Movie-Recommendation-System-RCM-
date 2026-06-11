@@ -22,7 +22,7 @@ import { Admin } from './pages/Admin'
 export default function App() {
   return (
     <I18nProvider>
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'}>
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />

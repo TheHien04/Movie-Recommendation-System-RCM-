@@ -1,5 +1,5 @@
 import { authHeaders, getToken } from './auth'
-import { API_BASE } from './config'
+import { getApiBase } from './config'
 import { getCloudWatchlist, syncWatchlistCloud } from './api'
 
 const STORAGE_KEY = 'cinemate-watchlist'
@@ -31,13 +31,13 @@ export async function toggleWatchlist(title: string): Promise<boolean> {
   if (getToken()) {
     try {
       if (adding) {
-        await fetch(`${API_BASE}/api/users/watchlist`, {
+        await fetch(`${getApiBase()}/api/users/watchlist`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify({ title }),
         })
       } else {
-        await fetch(`${API_BASE}/api/users/watchlist/${encodeURIComponent(title)}`, {
+        await fetch(`${getApiBase()}/api/users/watchlist/${encodeURIComponent(title)}`, {
           method: 'DELETE',
           headers: authHeaders(),
         })
