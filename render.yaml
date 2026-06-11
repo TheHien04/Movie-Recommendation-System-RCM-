@@ -1,11 +1,14 @@
 # One-click deploy: Render Dashboard → New → Blueprint → connect this repo
 # Live URLs (after deploy):
 #   Web:  https://cinemate-web.onrender.com
-#   API:  https://cinemate-api.onrender.com
+#   API:  https://movie-rcm-api.onrender.com
+#
+# If you had an OLD service named cinemate-api, delete it in Render Dashboard
+# (it returns {"message":"Welcome to the Backend"} and breaks the app).
 
 services:
   - type: web
-    name: cinemate-api
+    name: movie-rcm-api
     runtime: python
     plan: free
     buildCommand: bash deploy/render-build-api.sh
@@ -42,5 +45,5 @@ services:
       - key: CINEMATE_API_HOST
         fromService:
           type: web
-          name: cinemate-api
+          name: movie-rcm-api
           property: host
