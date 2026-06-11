@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Movie_Recommend_System/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ../../requirements.txt
+      - name: Lint (ruff)
+        run: ruff check app tests --config ../../pyproject.toml
+      - name: Train ML artifacts
+        run: python scripts/train_models.py
+      - name: Run tests with coverage
+        run: pytest -q --cov=app --cov-report=term-missing --cov-fail-under=45
+        env:
+          ADMIN_API_KEY: ci-admin-key
+          SECRET_KEY: ci-secret-key
+          FLASK_ENV: testing
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Movie_Recommend_System/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: Movie_Recommend_System/web/package-lock.json
+      - name: Install, lint, test, build
+        run: |
+          npm ci
+          npm run lint
+          npm run test
+          npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    defaults:
+      run:
+        working-directory: Movie_Recommend_System/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: Movie_Recommend_System/web/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install backend + train models
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ../../requirements.txt
+          cd ../backend && python scripts/train_models.py
+      - name: Install frontend + Playwright
+        run: |
+          npm ci
+          npx playwright install chromium --with-deps
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          ADMIN_API_KEY: ci-admin-key
+          SECRET_KEY: ci-secret-key
+          FLASK_ENV: testing
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build API image
+        run: docker build -t cinemate-api:test .

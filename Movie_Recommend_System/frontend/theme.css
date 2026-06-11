@@ -1,0 +1,62 @@
+:root {
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --bg-elevated: rgba(30, 30, 30, 0.92);
+  --text-primary: #ffffff;
+  --text-muted: #b0b0b0;
+  --accent: #ffde59;
+  --accent-strong: #ffa500;
+  --danger: #ff6b6b;
+  --radius: 12px;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --font: "Inter", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--text-primary);
+  background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+}
+
+.app-toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  background: #222;
+  color: #fff;
+  box-shadow: var(--shadow);
+  z-index: 2000;
+}
+
+.app-toast--error {
+  border-left: 4px solid var(--danger);
+}
+
+.movie-explanation {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.movie-score {
+  font-size: 14px;
+  color: var(--accent);
+}
+
+.history-item {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.history-item .danger {
+  background: #442222;
+  color: #ffb3b3;
+}

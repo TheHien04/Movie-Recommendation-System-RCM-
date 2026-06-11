@@ -1,0 +1,9 @@
+**/.venv
+**/__pycache__
+**/.git
+**/node_modules
+**/.env
+**/cinemate.db
+**/evaluation_report_*.csv
+Movie_Recommend_System/frontend
+Movie_Recommend_System/notebooks

@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.coverage
+htmlcov/
+.pytest_cache/
+.ruff_cache/
+
+# Env & secrets
+.env
+.env.local
+*.pem
+
+# Database
+**/cinemate.db
+**/cinemate.db-journal
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# OS & IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# ML eval artifacts (regenerated in CI)
+Movie_Recommend_System/evaluation_report_*.csv
+
+# Legacy duplicates — canonical data is backend/data/movie.csv
+# Movie_Recommend_System/frontend/movie.csv

@@ -1,0 +1,26 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  deploy-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify production build
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          cd Movie_Recommend_System/backend
+          test -f artifacts/v1/manifest.json
+          cd ../web
+          npm ci
+          VITE_API_URL=https://cinemate-api.onrender.com npm run build
+      - name: Deploy reminder
+        run: |
+          echo "Push is on main — connect Render Blueprint if not already:"
+          echo "https://dashboard.render.com/blueprints"
+          echo "Live targets: cinemate-web.onrender.com + cinemate-api.onrender.com"

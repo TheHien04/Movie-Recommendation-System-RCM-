@@ -1,0 +1,22 @@
+[
+  {"input": "horror movies", "expected_movies": ["Alien", "The Shining", "The Thing", "Psycho", "A Nightmare on Elm Street"]},
+  {"input": "science fiction movies", "expected_movies": ["Interstellar", "Inception", "The Matrix", "Star Wars", "Blade Runner"]},
+  {"input": "comedy movies with Tom Hanks", "expected_movies": ["Forrest Gump", "Toy Story", "Catch Me If You Can"]},
+  {"input": "movies with Tom Hanks", "expected_movies": ["Forrest Gump", "The Green Mile", "Saving Private Ryan"]},
+  {"input": "action movies", "expected_movies": ["Inception", "The Dark Knight", "The Matrix", "Mad Max: Fury Road"]},
+  {"input": "animated movies", "expected_movies": ["Spirited Away", "The Lion King", "Toy Story", "Up"]},
+  {"input": "drama movies", "expected_movies": ["The Shawshank Redemption", "The Godfather", "12 Angry Men"]},
+  {"input": "movies directed by Christopher Nolan", "expected_movies": ["Inception", "The Dark Knight", "Interstellar", "Dunkirk"]},
+  {"input": "romantic movies", "expected_movies": ["Titanic", "The Notebook", "Pride & Prejudice", "La La Land"]},
+  {"input": "thriller movies", "expected_movies": ["Se7en", "The Silence of the Lambs", "Gone Girl", "Shutter Island"]},
+  {"input": "movies about war", "expected_movies": ["Saving Private Ryan", "Apocalypse Now", "1917", "Dunkirk"]},
+  {"input": "fantasy movies", "expected_movies": ["The Lord of the Rings: The Fellowship of the Ring", "Harry Potter and the Sorcerer's Stone", "Pan's Labyrinth"]},
+  {"input": "movies with Leonardo DiCaprio", "expected_movies": ["Inception", "Titanic", "The Wolf of Wall Street", "Shutter Island"]},
+  {"input": "crime movies", "expected_movies": ["The Godfather", "Pulp Fiction", "Goodfellas", "The Shawshank Redemption"]},
+  {"input": "family movies", "expected_movies": ["Toy Story", "Up", "The Lion King", "Finding Nemo"]},
+  {"input": "psychological movies", "expected_movies": ["Shutter Island", "Black Swan", "Fight Club", "The Sixth Sense"]},
+  {"input": "movies directed by Steven Spielberg", "expected_movies": ["Schindler's List", "Saving Private Ryan", "Jurassic Park", "E.T. the Extra-Terrestrial"]},
+  {"input": "adventure movies", "expected_movies": ["Indiana Jones and the Raiders of the Lost Ark", "The Lord of the Rings: The Fellowship of the Ring", "Jurassic Park"]},
+  {"input": "mystery movies", "expected_movies": ["Se7en", "Gone Girl", "The Sixth Sense", "Shutter Island"]},
+  {"input": "classic movies", "expected_movies": ["The Godfather", "Casablanca", "12 Angry Men", "Psycho"]}
+]

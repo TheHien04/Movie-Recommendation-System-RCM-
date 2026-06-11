@@ -1,68 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Recommendation Chatbot</title>
+    <title>Cinemate — Gợi ý phim thông minh</title>
+    <link rel="stylesheet" href="theme.css">
     <link rel="stylesheet" href="App.css">
     <link rel="stylesheet" href="navigationbar.css">
 </head>
 <body>
-    <div class="container">
-        <h2 class="header"> Movie Recommendation Chatbot</h2>
-        <p class="subtitle">Find the best movies instantly! Just ask Cinamate for a recommendation.</p>
-        
-        <!-- Beautiful Animated Button -->
-        <button class="ask-movies-btn" onclick="goToChatbot()">🎥 Ask Cinemate's chatbot!</button>
+    <header>
+        <nav class="navbar">
+            <div class="logo"><img src="horizontal_logo.png" alt="Cinemate Logo"></div>
+            <ul class="nav-links">
+                <li><a href="index.html">Trang chủ</a></li>
+                <li><a href="genre.html">Thể loại</a></li>
+                <li><a href="App.html" class="active">Chatbot</a></li>
+                <li><a href="chatbot.html">Trò chuyện</a></li>
+            </ul>
+        </nav>
+    </header>
 
-        <!-- Random Prompts Section -->
-        <h3 class="subtitle">✨ Try Some Random Prompts:</h3>
+    <div class="container">
+        <h1 class="header">Cinemate Recommendation</h1>
+        <p class="subtitle">Hệ thống gợi ý phim hybrid: Content-Based + Collaborative Filtering + NLP.</p>
+        <button class="ask-movies-btn" type="button" onclick="goToChatbot()">Bắt đầu trò chuyện</button>
+
+        <h2 class="subtitle">Gợi ý nhanh</h2>
         <div class="prompts-container">
-            <div class="prompt-box" onclick="goToChatbotWithPrompt('Recommend me a comedy movie')">😂 Recommend me a comedy movie</div>
-            <div class="prompt-box" onclick="goToChatbotWithPrompt('Find movies with Leonardo DiCaprio')">🎭 Find movies with Leonardo DiCaprio</div>
-            <div class="prompt-box" onclick="goToChatbotWithPrompt('Show me movies directed by Christopher Nolan')">🎬 Show me movies directed by Christopher Nolan</div>
-            <div class="prompt-box" onclick="goToChatbotWithPrompt('Best movies from 2010')">🕒 Best movies from 2010</div>
-            <div class="prompt-box" onclick="goToChatbotWithPrompt('Short movies under 90 minutes')">⏳ Short movies under 90 minutes</div>
-            <div class="prompt-box" onclick="goToChatbotWithPrompt('A movie about time travel')">🔄 A movie about time travel</div>
+            <button class="prompt-box" type="button" onclick="goToChatbotWithPrompt('Gợi ý phim hài')">Phim hài</button>
+            <button class="prompt-box" type="button" onclick="goToChatbotWithPrompt('Phim có Leonardo DiCaprio')">Leonardo DiCaprio</button>
+            <button class="prompt-box" type="button" onclick="goToChatbotWithPrompt('Phim đạo diễn Christopher Nolan')">Christopher Nolan</button>
+            <button class="prompt-box" type="button" onclick="goToChatbotWithPrompt('Phim khoa học viễn tưởng hay nhất')">Khoa học viễn tưởng</button>
+            <button class="prompt-box" type="button" onclick="goToChatbotWithPrompt('Phim kinh dị ngắn dưới 100 phút')">Kinh dị ngắn</button>
+            <button class="prompt-box" type="button" onclick="goToChatbotWithPrompt('Phim về du hành thời gian')">Du hành thời gian</button>
         </div>
 
-        <!-- Movies container -->
+        <h2 class="subtitle">Phim nổi bật hôm nay</h2>
         <div class="movies-container" id="moviesList"></div>
     </div>
 
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const moviesList = document.getElementById("moviesList");
 
-            fetch("navigationbar.html")
-            .then(response => response.text())
-            .then(data => {
-                document.body.insertAdjacentHTML("afterbegin", data);
-            });
-
-            function fetchMovies() {
-                fetch("http://127.0.0.1:5000/random_movies")
-                    .then(response => response.json())
-                    .then(data => {
-                        moviesList.innerHTML = "";
-                        data.movies.forEach(movie => {
-                            moviesList.innerHTML += `
-                                <div class="movie-card">
-                                    <img class="movie-poster" src="${movie.poster}" alt="${movie.title}">
-                                    <h3 class="movie-title">${movie.title} (${movie.year})</h3>
-                                    <p class="movie-genre">📽️ ${movie.genre}</p>
-                                    <p class="movie-ratings">⭐ ${movie.imdb_rating} | 🍅 ${movie.rotten_rating}</p>
-                                    <p class="movie-director">🎬 Director: ${movie.director}</p>
-                                    <p class="movie-actors">🎭 Actors: ${movie.actors}</p>
-                                    <p class="movie-runtime">⏳ Runtime: ${movie.runtime} mins</p>
-                                    <p class="movie-description">${movie.description}</p>
-                                </div>
-                            `;
-                        });
+            fetch(apiUrl("/random_movies"))
+                .then((response) => response.json())
+                .then((data) => {
+                    moviesList.innerHTML = "";
+                    (data.movies || []).forEach((movie) => {
+                        const card = document.createElement("article");
+                        card.className = "movie-card";
+                        card.innerHTML = `
+                            <img class="movie-poster" src="${escapeHtml(movie.poster)}" alt="${escapeHtml(movie.title)}" loading="lazy">
+                            <h3 class="movie-title">${escapeHtml(movie.title)} (${escapeHtml(movie.year)})</h3>
+                            <p class="movie-genre">${escapeHtml(movie.genre)}</p>
+                            <p class="movie-ratings">⭐ ${escapeHtml(movie.imdb_rating)} | 🍅 ${escapeHtml(movie.rotten_rating)}</p>
+                            <p class="movie-description">${escapeHtml(movie.description)}</p>
+                        `;
+                        moviesList.appendChild(card);
                     });
-            }
-
-            fetchMovies();
+                })
+                .catch(() => showToast("Không tải được phim nổi bật. Kiểm tra backend.", "error"));
         });
 
         function goToChatbot() {

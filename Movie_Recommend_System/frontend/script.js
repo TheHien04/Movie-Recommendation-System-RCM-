@@ -1,6 +1,3 @@
-const API_KEY = '738f8682fc5143163b145d03a2016b0b'; // Thay bằng key bảo mật
-const BASE_URL = 'https://api.themoviedb.org/3/';
-
 document.addEventListener("DOMContentLoaded", function () {
     fetchAndProcessCSV();
     setInterval(changePoster, 8000);
@@ -167,7 +164,7 @@ function displayTopMovies(sectionId, movieList) {
 ///// Dùng để chuyển qua trailer 
 async function getMovieId(movieTitle) {
     try {
-        const response = await fetch(`${BASE_URL}search/movie?api_key=${API_KEY}&query=${encodeURIComponent(movieTitle)}`);
+        const response = await fetch(tmdbUrl("search/movie", { query: movieTitle }));
         const data = await response.json();
 
         if (data.results.length > 0) {
@@ -191,7 +188,7 @@ async function fetchMovieTrailer(movieTitle) {
     }
 
     try {
-        const response = await fetch(`${BASE_URL}movie/${movieId}/videos?api_key=${API_KEY}`);
+        const response = await fetch(tmdbUrl(`movie/${movieId}/videos`));
         const data = await response.json();
 
         const trailer = data.results.find(video => video.type === "Trailer" && video.site === "YouTube");

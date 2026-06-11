@@ -1,112 +1,76 @@
-# evaluate_performance.py
+"""Offline evaluation with Precision@K, Recall@K, NDCG@K, and MAP."""
+import json
 import sys
-import os
+import time
+from datetime import datetime
 from pathlib import Path
 
-# Thêm đường dẫn project vào PYTHONPATH
-current_dir = Path(__file__).parent.absolute()
-sys.path.append(str(current_dir / "backend")) 
-import json
-import time
 import pandas as pd
-from datetime import datetime
-from backend.app.services.top5movie_service import recommend_movies
 
-def load_test_cases(file_path):
-    """Đọc test cases từ file JSON"""
+ROOT = Path(__file__).parent.absolute()
+sys.path.append(str(ROOT / "backend"))
+
+from app.ml.metrics import evaluate_ranking  # noqa: E402
+from app.services.top5movie_service import recommend_movies  # noqa: E402
+
+
+def load_test_cases(file_path: Path):
+  with open(file_path, "r", encoding="utf-8") as handle:
+    return json.load(handle)
+
+
+def run_evaluation(test_cases, k: int = 5):
+  results = []
+  for idx, case in enumerate(test_cases):
+    start = time.time()
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception as e:
-        print(f"Lỗi khi đọc file test cases: {str(e)}")
-        return []
+      recommendations = recommend_movies(case["input"])
+      recommended_titles = [movie["title"] for movie in recommendations]
+      metrics = evaluate_ranking(recommended_titles, case.get("expected_movies", []), k=k)
+      results.append({
+        "test_case": case["input"],
+        **metrics,
+        "response_time": round(time.time() - start, 2),
+        "recommended": recommended_titles,
+        "expected": case.get("expected_movies", []),
+      })
+    except Exception as exc:
+      results.append({"test_case": case["input"], "error": str(exc)})
 
-def calculate_metrics(recommended, expected):
-    """Tính toán precision và recall"""
-    relevant = len(set([m["title"] for m in recommended]) & set(expected))
-    precision = relevant / len(recommended) if recommended else 0
-    recall = relevant / len(expected) if expected else 0
-    return precision, recall
+    if (idx + 1) % 3 == 0:
+      print(f"Processed {idx + 1}/{len(test_cases)}")
+  return results
 
-def run_evaluation(test_cases):
-    """Chạy đánh giá trên tất cả test cases"""
-    results = []
-    
-    for idx, case in enumerate(test_cases):
-        start_time = time.time()
-        
-        try:
-            # Gọi logic recommendation
-            recommendations = recommend_movies(case["input"])
-            
-            # Tính toán thời gian và metrics
-            response_time = time.time() - start_time
-            precision, recall = calculate_metrics(recommendations, case.get("expected_movies", []))
-            
-            results.append({
-                "test_case": case["input"],
-                "precision": round(precision, 2),
-                "recall": round(recall, 2),
-                "response_time": round(response_time, 2),
-                "recommended": [m["title"] for m in recommendations],
-                "expected": case.get("expected_movies", [])
-            })
-            
-        except Exception as e:
-            print(f"Lỗi với test case '{case['input']}': {str(e)}")
-            results.append({
-                "test_case": case["input"],
-                "error": str(e)
-            })
-            
-        # Progress reporting
-        if (idx + 1) % 5 == 0:
-            print(f"Đã xử lý {idx+1}/{len(test_cases)} test cases")
-    
-    return results
 
-def generate_report(results):
-    """Tạo báo cáo chi tiết"""
-    # Tạo DataFrame
-    df = pd.DataFrame(results)
-    
-    # Tính toán metrics tổng hợp
-    summary = {
-        "total_cases": len(results),
-        "success_rate": len([r for r in results if "error" not in r]) / len(results),
-        "avg_precision": df["precision"].mean(),
-        "avg_recall": df["recall"].mean(),
-        "avg_response_time": df["response_time"].mean()
-    }
-    
-    # Xuất file
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    report_filename = f"evaluation_report_{timestamp}.csv"
-    df.to_csv(report_filename, index=False)
-    
-    # In kết quả
-    print("\n=== KẾT QUẢ ĐÁNH GIÁ ===")
-    print(f"Tổng số test cases: {summary['total_cases']}")
-    print(f"Tỷ lệ thành công: {summary['success_rate']:.1%}")
-    print(f"Precision trung bình: {summary['avg_precision']:.2f}")
-    print(f"Recall trung bình: {summary['avg_recall']:.2f}")
-    print(f"Thời gian phản hồi TB: {summary['avg_response_time']:.2f}s")
-    print(f"\nBáo cáo đã được lưu vào: {report_filename}")
+def generate_report(results, k: int = 5):
+  df = pd.DataFrame(results)
+  success = [row for row in results if "error" not in row]
+  summary = {
+    "total_cases": len(results),
+    "success_rate": len(success) / len(results) if results else 0,
+    f"avg_precision@{k}": df[f"precision@{k}"].mean() if success else 0,
+    f"avg_recall@{k}": df[f"recall@{k}"].mean() if success else 0,
+    f"avg_ndcg@{k}": df[f"ndcg@{k}"].mean() if success else 0,
+    "avg_map": df["map"].mean() if success else 0,
+    "avg_response_time": df["response_time"].mean() if success else 0,
+  }
+
+  timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+  report_filename = ROOT / f"evaluation_report_{timestamp}.csv"
+  df.to_csv(report_filename, index=False)
+
+  print("\n=== EVALUATION RESULTS ===")
+  for key, value in summary.items():
+    if isinstance(value, float) and "rate" in key:
+      print(f"{key}: {value:.1%}")
+    elif isinstance(value, float):
+      print(f"{key}: {value:.4f}")
+    else:
+      print(f"{key}: {value}")
+  print(f"Report saved to: {report_filename}")
+
 
 if __name__ == "__main__":
-    # Cấu hình
-    TEST_CASE_PATH = "C:\\Users\\Admin\\Downloads\\test_cases (1).json"  # Cập nhật đường dẫn thực tế"
-    
-    print("🚀 Bắt đầu quá trình đánh giá hiệu năng...")
-    
-    # Thực hiện đánh giá
-    test_cases = load_test_cases(TEST_CASE_PATH)
-    
-    if not test_cases:
-        print("❌ Không thể đọc test cases. Vui lòng kiểm tra file và định dạng.")
-        exit(1)
-        
-    results = run_evaluation(test_cases)
-    generate_report(results)
-    
-    print("✅ Đánh giá hoàn tất!")
+  test_path = ROOT / "data" / "test_cases.json"
+  results = run_evaluation(load_test_cases(test_path), k=5)
+  generate_report(results, k=5)

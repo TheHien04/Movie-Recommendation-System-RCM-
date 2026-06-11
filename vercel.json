@@ -1,0 +1,7 @@
+{
+  "$comment": "Optional: deploy frontend only on Vercel. Set VITE_API_URL to your Render API URL in project env.",
+  "buildCommand": "cd Movie_Recommend_System/web && npm ci && npm run build",
+  "outputDirectory": "Movie_Recommend_System/web/dist",
+  "framework": "vite",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}

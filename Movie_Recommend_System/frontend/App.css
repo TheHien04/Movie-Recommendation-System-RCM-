@@ -31,6 +31,19 @@ html {
     opacity: 0.9;
 }
 
+.prompts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.prompt-box {
+  border: none;
+  cursor: pointer;
+  font: inherit;
+}
+
 /* GLOWING CHATBOT BUTTON */
 .ask-movies-btn {
     width: 80%;

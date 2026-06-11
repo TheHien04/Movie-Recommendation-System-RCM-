@@ -1,0 +1,46 @@
+# One-click deploy: Render Dashboard → New → Blueprint → connect this repo
+# Live URLs (after deploy):
+#   Web:  https://cinemate-web.onrender.com
+#   API:  https://cinemate-api.onrender.com
+
+services:
+  - type: web
+    name: cinemate-api
+    runtime: python
+    plan: free
+    buildCommand: bash deploy/render-build-api.sh
+    startCommand: cd Movie_Recommend_System/backend && gunicorn -b 0.0.0.0:$PORT -w 2 --timeout 120 app:app
+    healthCheckPath: /api/health/ready
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_API_KEY
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://cinemate-web.onrender.com
+      - key: CORS_ORIGINS
+        value: https://cinemate-web.onrender.com,https://cinemate-web.onrender.com/
+      - key: TMDB_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+
+  - type: web
+    name: cinemate-web
+    runtime: static
+    buildCommand: bash deploy/render-build-web.sh
+    staticPublishPath: Movie_Recommend_System/web/dist
+    envVars:
+      - key: CINEMATE_API_HOST
+        fromService:
+          type: web
+          name: cinemate-api
+          property: host
