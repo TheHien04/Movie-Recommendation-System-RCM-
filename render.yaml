@@ -1,6 +1,6 @@
-# API on Render (Docker, lean). Frontend on GitHub Pages (auto via CI).
-# App:  https://thehien04.github.io/Movie-Recommendation-System-RCM-/
-# API:  https://cinemate-rcm-api.onrender.com
+# API:  https://cinemate-rcm-api.onrender.com  (Docker, lean)
+# Web:  https://cinemate-web.onrender.com        (static backup)
+# Web:  https://thehien04.github.io/Movie-Recommendation-System-RCM-/  (GitHub Pages — enable in Settings)
 
 services:
   - type: web
@@ -24,3 +24,12 @@ services:
         sync: false
       - key: DATABASE_URL
         sync: false
+
+  - type: web
+    name: cinemate-web
+    runtime: static
+    buildCommand: bash deploy/render-build-web-static.sh
+    staticPublishPath: Movie_Recommend_System/web/dist
+    envVars:
+      - key: NODE_VERSION
+        value: "22.16.0"
