@@ -1,95 +1,92 @@
-# Cinemate — Hệ thống Gợi ý Phim Thông minh (Hybrid ML + RAG)
+# Cinemate
+
+Intelligent movie recommendation platform combining content-based filtering, collaborative filtering, neural collaborative filtering (NeuMF), hybrid ensemble ranking, retrieval-augmented generation (RAG), and behavioral personalization.
 
 [![CI](https://github.com/TheHien04/Movie-Recommendation-System-RCM-/actions/workflows/ci.yml/badge.svg)](https://github.com/TheHien04/Movie-Recommendation-System-RCM-/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 
-> **Đồ án môn Machine Learning** — Nền tảng full-stack gợi ý phim kết hợp **Content-Based Filtering**, **Collaborative Filtering**, **Neural Collaborative Filtering (NeuMF)**, **Hybrid Ensemble**, **RAG** và **cá nhân hóa theo hành vi người dùng**.
-
-| | Link |
-|---|---|
-| **Live Demo (Render)** | [https://cinemate-live.onrender.com](https://cinemate-live.onrender.com) |
-| **GitHub Pages** | [https://thehien04.github.io/Movie-Recommendation-System-RCM-/](https://thehien04.github.io/Movie-Recommendation-System-RCM-/) |
-| **Repository** | [TheHien04/Movie-Recommendation-System-RCM-](https://github.com/TheHien04/Movie-Recommendation-System-RCM-) |
+**Live demo:** [cinemate-live.onrender.com](https://cinemate-live.onrender.com)  
+**Static mirror:** [thehien04.github.io/Movie-Recommendation-System-RCM-](https://thehien04.github.io/Movie-Recommendation-System-RCM-/)  
+**Source:** [github.com/TheHien04/Movie-Recommendation-System-RCM-](https://github.com/TheHien04/Movie-Recommendation-System-RCM-)
 
 ---
 
-## Mục lục
+## Table of contents
 
-1. [Tóm tắt đồ án](#1-tóm-tắt-đồ-án)
-2. [Bài toán & mục tiêu](#2-bài-toán--mục-tiêu)
-3. [Kiến trúc hệ thống](#3-kiến-trúc-hệ-thống)
-4. [Pipeline Machine Learning](#4-pipeline-machine-learning)
-5. [Đánh giá mô hình](#5-đánh-giá-mô-hình)
-6. [Demo giao diện — theo luồng người dùng](#6-demo-giao-diện--theo-luồng-người-dùng)
-7. [Công nghệ sử dụng](#7-công-nghệ-sử-dụng)
-8. [Cài đặt & chạy local](#8-cài-đặt--chạy-local)
-9. [Triển khai Production](#9-triển-khai-production)
-10. [Tài liệu kỹ thuật](#10-tài-liệu-kỹ-thuật)
-
----
-
-## 1. Tóm tắt đồ án
-
-**Cinemate** là hệ thống gợi ý phim end-to-end: người dùng mô tả sở thích bằng ngôn ngữ tự nhiên (chat, tìm kiếm, mood), hệ thống **truy xuất – xếp hạng – đa dạng hóa** danh sách phim từ catalog ~500 tiêu đề, đồng thời **học từ watchlist, rating và hành vi duyệt** khi đăng nhập.
-
-Điểm khác biệt so với demo ML thông thường:
-
-- **Hybrid v3** — kết hợp Sentence-BERT, SVD, NeuMF (PyTorch), rule NLP và MMR
-- **RAG** — truy xuất ngữ nghĩa + sinh câu trả lời (GPT-4o-mini, tùy chọn)
-- **A/B Testing** — so sánh Hybrid vs RAG trên cùng query
-- **MLOps** — train script, artifacts versioned, model card, CI gate NDCG
-- **Production** — JWT, Postgres, Docker, Render unified deploy, 42+ automated tests
+1. [Overview](#overview)
+2. [Problem statement](#problem-statement)
+3. [System architecture](#system-architecture)
+4. [Machine learning pipeline](#machine-learning-pipeline)
+5. [Evaluation](#evaluation)
+6. [Product walkthrough](#product-walkthrough)
+7. [Technology stack](#technology-stack)
+8. [Local development](#local-development)
+9. [Deployment](#deployment)
+10. [Documentation](#documentation)
+11. [Security](#security)
 
 ---
 
-## 2. Bài toán & mục tiêu
+## Overview
 
-### 2.1 Bài toán
+Cinemate is a production-oriented machine learning capstone: users express preferences in natural language (chat, search, mood filters), and the system retrieves, ranks, and diversifies recommendations from a catalog of approximately 500 titles. For authenticated users, watchlist entries, star ratings, and browse events feed back into the ranking pipeline.
 
-Cho tập phim \( \mathcal{M} \) và truy vấn người dùng \( q \) (text), tìm tập \( TopK \subset \mathcal{M} \) tối đa hóa **relevance** và **diversity**, có thể kèm ràng buộc genre / diễn viên / đạo diễn.
+**Core capabilities**
 
-### 2.2 Mục tiêu đồ án
-
-| STT | Mục tiêu | Trạng thái |
-|-----|----------|------------|
-| 1 | Xây dựng pipeline CBF (TF-IDF / Transformer embeddings) | ✅ |
-| 2 | Collaborative Filtering (TruncatedSVD) | ✅ |
-| 3 | Neural CF — NeuMF huấn luyện PyTorch | ✅ |
-| 4 | Hybrid fusion + hyperparameter tuning (NDCG@5) | ✅ |
-| 5 | RAG conversational recommendations | ✅ |
-| 6 | Đánh giá định lượng (NDCG, Precision, Recall, MAP) | ✅ |
-| 7 | Ứng dụng web full-stack + triển khai cloud | ✅ |
-| 8 | Cá nhân hóa từ rating / watchlist / events | ✅ |
+| Capability | Description |
+|------------|-------------|
+| Hybrid v3 | Sentence-BERT retrieval, TruncatedSVD CF, NeuMF (PyTorch), rule-based NLP, MMR diversification |
+| RAG | Semantic retrieval with optional GPT-4o-mini answer generation |
+| A/B testing | Variant assignment for Hybrid vs RAG |
+| Personalization | User signals (watchlist, ratings, events) influence hybrid seeds and genre weights |
+| MLOps | Versioned artifacts, training script, model card, offline NDCG gate in CI |
+| Platform | JWT auth, rate limiting, PostgreSQL (production), Docker, unified Render deploy |
 
 ---
 
-## 3. Kiến trúc hệ thống
+## Problem statement
+
+Given a movie catalog \(\mathcal{M}\) and a user query \(q\) (natural language text), return a ranked subset \(TopK \subset \mathcal{M}\) that maximizes relevance and diversity, optionally constrained by genre, cast, or director metadata.
+
+**Project objectives**
+
+| # | Objective | Status |
+|---|-----------|--------|
+| 1 | Content-based filtering (TF-IDF / transformer embeddings) | Complete |
+| 2 | Matrix factorization collaborative filtering (TruncatedSVD) | Complete |
+| 3 | Neural collaborative filtering (NeuMF, PyTorch) | Complete |
+| 4 | Hybrid fusion with hyperparameter tuning (NDCG@5) | Complete |
+| 5 | RAG-based conversational recommendations | Complete |
+| 6 | Quantitative evaluation (NDCG, Precision, Recall, MAP) | Complete |
+| 7 | Full-stack web application and cloud deployment | Complete |
+| 8 | Behavioral personalization (ratings, watchlist, events) | Complete |
+
+---
+
+## System architecture
 
 ```mermaid
 flowchart TB
   subgraph Client["Frontend — React 19 / Vite"]
-    UI[Pages: Home · Chat · Search · Watchlist · Profile]
+    UI[Home · Chat · Search · Watchlist · Profile]
   end
 
   subgraph API["Backend — Flask / Gunicorn"]
-    Routes[REST API + OpenAPI]
-    Auth[JWT · Rate Limit · Password Policy]
-    SPA[Serve SPA — unified Render deploy]
+    Routes[REST API · OpenAPI]
+    Auth[JWT · Rate limits · Password policy]
+    SPA[Static SPA — unified deploy]
   end
 
-  subgraph ML["ML Layer"]
+  subgraph ML["ML layer"]
     SEM[Sentence-BERT / TF-IDF]
     SVD[TruncatedSVD CF]
     NCF[NeuMF — PyTorch]
-    HYB[Hybrid Fusion + MMR]
-    RAG[RAG + GPT-4o-mini]
+    HYB[Hybrid fusion · MMR]
+    RAG[RAG · GPT-4o-mini]
   end
 
-  subgraph Data["Data & Ops"]
-    CSV[(movie.csv ~500 titles)]
-    PG[(PostgreSQL / SQLite)]
+  subgraph Data["Data & ops"]
+    CSV[(movie.csv)]
+    PG[(PostgreSQL)]
     ART[artifacts/v1/]
   end
 
@@ -103,246 +100,230 @@ flowchart TB
   ART --> HYB
 ```
 
-**Luồng gợi ý chính:** `User Query` → NLP extract rules → song song semantic / CF / neural scores → weighted fusion → MMR diversity → JSON + explainability.
+**Recommendation flow:** parse query and extract constraints → score candidates via semantic, collaborative, and neural channels → weighted fusion → MMR re-ranking → response with explainability metadata.
 
 ---
 
-## 4. Pipeline Machine Learning
+## Machine learning pipeline
 
 ```
-Dataset (movie.csv)
-    │
-    ├─► Validation & feature engineering (genre, cast, overview text)
-    │
-    ├─► Content-Based: TF-IDF hoặc all-MiniLM-L6-v2 embeddings
-    │
-    ├─► Collaborative: TruncatedSVD trên ma trận genre-user
-    │
-    ├─► Neural CF: NeuMF (GMF + MLP), BCE loss, Adam
-    │
-    ├─► Hyperopt: grid-search trọng số fusion (objective = NDCG@5)
-    │
-    └─► Export artifacts/v1/ + manifest.json
+movie.csv
+  → schema validation & text feature engineering
+  → content embeddings (TF-IDF or all-MiniLM-L6-v2)
+  → SVD item factors (genre-user matrix)
+  → NeuMF training (implicit personas, BCE loss)
+  → grid search fusion weights (maximize NDCG@5)
+  → export artifacts/v1/ + manifest.json
 ```
 
-Huấn luyện:
+Train locally:
 
 ```bash
 cd Movie_Recommend_System/backend
 python scripts/train_models.py
 ```
 
-Chi tiết mô hình: [MODEL_CARD.md](MODEL_CARD.md)
+Model documentation: [MODEL_CARD.md](MODEL_CARD.md)
 
 ---
 
-## 5. Đánh giá mô hình
+## Evaluation
 
-| Metric | Hybrid v3 | Ghi chú |
-|--------|-----------|---------|
-| **NDCG@5** | ~0.11 | 20 test cases có nhãn, benchmark nội bộ |
-| **Precision@5** | ~0.07 | |
-| **Recall@5** | ~0.09 | |
-| **MAP** | ~0.07 | |
+Offline benchmark on 20 labeled queries (`Movie_Recommend_System/data/test_cases.json`).
 
-- Benchmark: `Movie_Recommend_System/data/test_cases.json`
-- CI gate: `MIN_AVG_NDCG = 0.10` — `pytest tests/test_eval_gate.py`
-- Báo cáo đầy đủ: [RESULTS.md](RESULTS.md)
+| Metric | Hybrid v3 |
+|--------|-----------|
+| NDCG@5 | ~0.11 |
+| Precision@5 | ~0.07 |
+| Recall@5 | ~0.09 |
+| MAP | ~0.07 |
 
-> *Lưu ý học thuật:* catalog ~500 phim — metric mang tính **tương đối** để so sánh ablation (CBF vs Hybrid vs RAG), không so sánh trực tiếp với hệ thống industrial scale.
+Reproduce:
+
+```bash
+cd Movie_Recommend_System/backend
+pytest tests/test_eval_gate.py -q
+# or: curl http://127.0.0.1:5001/api/ml/evaluate
+```
+
+Full report: [RESULTS.md](RESULTS.md)
+
+Metrics are relative to this catalog size and benchmark set; they support ablation and regression testing rather than industrial-scale comparison.
 
 ---
 
-## 6. Demo giao diện — theo luồng người dùng
+## Product walkthrough
 
-### 6.1 Trang chủ — Khám phá & gợi ý ban đầu
+Screenshots follow the primary user journey: discover → query → refine → save → analyze.
 
-Trang chủ tổng hợp **trending**, **personalized feed** (khi đăng nhập), **random picks** và lối tắt vào chat AI.
+### Home — discovery and personalized rails
+
+Landing page with trending titles, personalized recommendations (authenticated), and entry points into AI chat.
 
 | | |
 |:---:|:---:|
-| Hero & navigation | Trending + personalized rails |
-| ![Home — hero](Image/home1.jpg) | ![Home — recommendations](Image/home2.jpg) |
+| ![Home — hero and navigation](Image/home1.jpg) | ![Home — recommendation rails](Image/home2.jpg) |
 
-![Home — stats & discovery](Image/home3.jpg)
+![Home — stats and discovery](Image/home3.jpg)
 
----
+### AI chat — Hybrid ML and RAG
 
-### 6.2 AI Chat — Hybrid ML & RAG
+Natural-language queries routed to Hybrid v3 (variant A) or RAG (variant B). Results include posters, scores, and optional thumbs feedback. Chat history syncs to the user account when signed in.
 
-Người dùng chat bằng ngôn ngữ tự nhiên. Hệ thống chạy **Hybrid v3** (variant A) hoặc **RAG** (variant B), hiển thị poster, điểm số và feedback 👍/👎 cho A/B analytics. Lịch sử chat **đồng bộ cloud** khi đăng nhập.
+![AI recommendation chat](Image/ai-chat.jpg)
 
-![AI Recommendation Chat — Hybrid / RAG](Image/ai-chat.jpg)
+### Search — semantic retrieval and filters
 
----
+Sentence-BERT search with advanced filters (genre, year, minimum rating).
 
-### 6.3 Tìm kiếm ngữ nghĩa & lọc nâng cao
+![Semantic search](Image/search.jpg)
 
-**Semantic search** (Sentence-BERT) kết hợp bộ lọc genre, năm, rating tối thiểu.
+### Browse — genres and moods
 
-![Semantic Search](Image/search.jpg)
-
----
-
-### 6.4 Duyệt theo thể loại & Mood
-
-- **Genres** — browse catalog theo nhóm thể loại
-- **Moods** — chip cảm xúc → query hybrid được chuẩn hóa sẵn
+Genre browsing and mood-based recommendation shortcuts mapped to hybrid queries.
 
 | | |
 |:---:|:---:|
-| ![Browse by Genre](Image/genres.jpg) | ![Mood-based Recommendations](Image/moods.jpg) |
+| ![Browse by genre](Image/genres.jpg) | ![Mood-based recommendations](Image/moods.jpg) |
 
----
+### Watchlist and profile
 
-### 6.5 Chi tiết phim, Watchlist & Profile
-
-- **Watchlist** — lưu local + sync cloud, export/share URL
-- **Profile** — đăng ký/đăng nhập JWT, thống kê watchlist/ratings/chat
-- **Rating** — đánh sao ảnh hưởng trực tiếp tới personalization pipeline
+Local-first watchlist with cloud sync, JWT authentication, and usage statistics. Star ratings feed the personalization pipeline.
 
 | | |
 |:---:|:---:|
-| ![Watchlist](Image/watchlist.jpg) | ![User Profile & sync](Image/profile.jpg) |
+| ![Watchlist](Image/watchlist.jpg) | ![User profile](Image/profile.jpg) |
 
----
+### ML analysis — model comparison and ranking
 
-### 6.6 So sánh mô hình & phân tích ML
-
-| Tính năng | Mô tả ML |
-|-----------|----------|
-| **ML Battle** | Side-by-side Hybrid v3 vs RAG trên cùng query |
-| **Compare** | Ma trận similarity cosine giữa 2–3 phim |
-| **Leaderboard** | Top IMDb, lọc genre — baseline popularity |
+| Feature | Purpose |
+|---------|---------|
+| ML Battle | Side-by-side Hybrid v3 vs RAG on the same query |
+| Compare | Cosine similarity matrix across 2–3 titles |
+| Leaderboard | Top-rated titles with genre filter |
 
 | | |
 |:---:|:---:|
-| ![ML Battle — Hybrid vs RAG](Image/ml-battle.jpg) | ![Movie Compare — similarity matrix](Image/compare.jpg) |
+| ![ML Battle](Image/ml-battle.jpg) | ![Movie compare](Image/compare.jpg) |
 
 ![Leaderboard](Image/leaderboard.jpg)
 
 ---
 
-## 7. Công nghệ sử dụng
+## Technology stack
 
-| Tầng | Công nghệ |
-|------|-----------|
-| **Frontend** | React 19, TypeScript, Vite 8, Tailwind CSS 4, PWA |
-| **Backend** | Flask, SQLAlchemy, JWT, Gunicorn, OpenAPI 3.0 |
-| **ML / AI** | scikit-learn, Sentence-Transformers, PyTorch (NeuMF), OpenAI API |
-| **Database** | PostgreSQL (production), SQLite (dev) |
-| **DevOps** | GitHub Actions, Docker, Render Blueprint, GitHub Pages |
-| **Testing** | pytest (42+), Vitest, Playwright E2E |
+| Layer | Technologies |
+|-------|----------------|
+| Frontend | React 19, TypeScript, Vite 8, Tailwind CSS 4 |
+| Backend | Flask, SQLAlchemy, JWT, Gunicorn, OpenAPI 3.0 |
+| ML / AI | scikit-learn, Sentence-Transformers, PyTorch (NeuMF), OpenAI API |
+| Data | PostgreSQL (production), SQLite (development) |
+| DevOps | GitHub Actions, Docker, Render Blueprint, GitHub Pages |
+| Testing | pytest (42+), Vitest, Playwright E2E |
 
 ---
 
-## 8. Cài đặt & chạy local
+## Local development
 
-### Yêu cầu
-
-- Python 3.11+
-- Node.js 22+
-- (Tuỳ chọn) `TMDB_API_KEY`, `OPENAI_API_KEY`
-
-### Backend
-
-```bash
-cd Movie_Recommend_System/backend
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r ../../requirements.txt
-cp .env.example .env          # chỉnh SECRET_KEY, TMDB_API_KEY
-python scripts/train_models.py
-python app.py                 # http://127.0.0.1:5001
-```
-
-### Frontend
-
-```bash
-cd Movie_Recommend_System/web
-npm install && npm run dev    # http://127.0.0.1:5173
-```
-
-### Chạy tests
+**Requirements:** Python 3.11+, Node.js 22+. Optional: `TMDB_API_KEY`, `OPENAI_API_KEY`.
 
 ```bash
 # Backend
 cd Movie_Recommend_System/backend
-pytest -q --cov=app --cov-fail-under=45
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r ../../requirements.txt
+cp .env.example .env    # set secrets locally — never commit .env
+python scripts/train_models.py
+python app.py           # http://127.0.0.1:5001
 
 # Frontend
 cd Movie_Recommend_System/web
-npm run lint && npm run test && npm run build
+npm install && npm run dev   # http://127.0.0.1:5173
+```
 
-# Docker
+**Tests**
+
+```bash
+cd Movie_Recommend_System/backend && pytest -q --cov=app --cov-fail-under=45
+cd Movie_Recommend_System/web && npm run lint && npm run test && npm run build
 docker compose up --build
 ```
 
 ---
 
-## 9. Triển khai Production
+## Deployment
 
-| Môi trường | URL | Ghi chú |
-|------------|-----|---------|
-| **Render (khuyến nghị)** | [cinemate-live.onrender.com](https://cinemate-live.onrender.com) | API + SPA cùng origin, Postgres tự provision |
-| **GitHub Pages** | [thehien04.github.io/.../](https://thehien04.github.io/Movie-Recommendation-System-RCM-/) | Static mirror, gọi API Render |
+| Environment | URL | Notes |
+|-------------|-----|-------|
+| Render (recommended) | [cinemate-live.onrender.com](https://cinemate-live.onrender.com) | Unified API + SPA; Postgres via `render.yaml` |
+| GitHub Pages | [thehien04.github.io/.../](https://thehien04.github.io/Movie-Recommendation-System-RCM-/) | Static frontend; API on Render |
 
-**Checklist triển khai:** xem [DEPLOY.md](DEPLOY.md)
+Deploy checklist: [DEPLOY.md](DEPLOY.md)
 
 ```bash
-# Render: connect repo → Manual Sync render.yaml
-# Set secrets: TMDB_API_KEY, OPENAI_API_KEY (optional)
+# After connecting the repo on Render: Manual Sync render.yaml
+# Set TMDB_API_KEY (required) and OPENAI_API_KEY (optional) in the dashboard
 
-# Verify
 curl https://cinemate-live.onrender.com/api/health/ready
 ```
 
 ---
 
-## 10. Tài liệu kỹ thuật
+## Documentation
 
-| Tài liệu | Nội dung |
+| Document | Contents |
 |----------|----------|
-| [MODEL_CARD.md](MODEL_CARD.md) | Kiến trúc mô hình, training, limitations |
-| [RESULTS.md](RESULTS.md) | Benchmark NDCG, personalization |
-| [DEPLOY.md](DEPLOY.md) | Hướng dẫn deploy Render / GH Pages |
-| [SECURITY.md](SECURITY.md) | Chính sách bảo mật |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Quy trình phát triển |
+| [MODEL_CARD.md](MODEL_CARD.md) | Model architecture, training, limitations |
+| [RESULTS.md](RESULTS.md) | Benchmark metrics, personalization |
+| [DEPLOY.md](DEPLOY.md) | Production deployment |
+| [SECURITY.md](SECURITY.md) | Security policy and controls |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Development workflow |
 
-### API chính
+**Key API endpoints**
 
-| Endpoint | Mô tả |
-|----------|-------|
-| `POST /recommend` | Hybrid hoặc RAG recommendations |
+| Endpoint | Description |
+|----------|-------------|
+| `POST /recommend` | Hybrid or RAG recommendations |
 | `GET /api/search?q=` | Semantic search |
-| `GET /api/personalized` | Feed cá nhân hoá (JWT) |
+| `GET /api/personalized` | Personalized feed (JWT) |
 | `GET /api/ml/evaluate` | Offline benchmark |
 | `GET /api/ml/explain/<title>` | Score breakdown |
 | `POST /api/v1/recommend` | B2B API (`X-API-Key`) |
 | `GET /api/health/ready` | Readiness probe |
 
-### Cấu trúc thư mục
+**Repository layout**
 
 ```
 Movie_Recommend_System/
 ├── backend/          # Flask API, ML modules, artifacts/
-│   ├── app/ml/       # hybrid, ncf, embeddings, metrics
-│   ├── artifacts/v1/ # model manifest & weights
-│   └── scripts/      # train_models.py
-├── web/              # React frontend (active)
-├── data/             # test_cases.json — eval benchmark
+├── web/              # React frontend
+├── data/             # Evaluation test cases
 ├── frontend/         # Legacy UI (archived)
 └── notebooks/        # ML experiments
-Image/                  # Screenshots — README demo
-Report/                 # Báo cáo đồ án
+Image/                  # Product screenshots
+Report/                 # Written report (thesis)
 ```
 
 ---
 
-## Tác giả
+## Security
 
-**TheHien04** — Machine Learning Course Project  
-Repository: [github.com/TheHien04/Movie-Recommendation-System-RCM-](https://github.com/TheHien04/Movie-Recommendation-System-RCM-)
+This repository is configured to exclude secrets and local databases from version control (`.env`, `cinemate.db`, keys). Production secrets (`SECRET_KEY`, `ADMIN_API_KEY`, `TMDB_API_KEY`, `OPENAI_API_KEY`, `DATABASE_URL`) must be set only in your hosting provider's environment.
+
+Do not commit:
+
+- `.env` or any file containing API keys or passwords
+- SQLite database files (`cinemate.db`)
+- Private keys (`.pem`, `.key`)
+
+See [SECURITY.md](SECURITY.md) for the full security policy.
+
+---
+
+## Author
+
+**TheHien04** — Machine Learning course capstone project
 
 ## License
 
-MIT — xem [LICENSE](LICENSE)
+MIT. See [LICENSE](LICENSE).

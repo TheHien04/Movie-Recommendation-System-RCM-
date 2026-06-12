@@ -9,10 +9,15 @@ htmlcov/
 .pytest_cache/
 .ruff_cache/
 
-# Env & secrets
+# Env & secrets (never commit)
 .env
 .env.local
+**/.env
+!**/.env.example
 *.pem
+*.key
+credentials.json
+secrets.json
 
 # Database
 **/cinemate.db
