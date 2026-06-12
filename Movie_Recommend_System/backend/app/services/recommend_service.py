@@ -1,4 +1,6 @@
 """Recommendation orchestration: rule filters + hybrid ML + optional AI fallback."""
+from __future__ import annotations
+
 import difflib
 import os
 from functools import lru_cache
@@ -127,7 +129,7 @@ def _ai_fallback_titles(user_input: str) -> List[str]:
   return list(dict.fromkeys(titles))
 
 
-def get_movie_recommendations(user_input: str, requirements: dict) -> List[dict]:
+def get_movie_recommendations(user_input: str, requirements: dict, user_id: int | None = None) -> List[dict]:
   actors = tuple(requirements.get("actors", []))
   genres = tuple(requirements.get("genres", []))
   directors = tuple(requirements.get("directors", []))
@@ -136,6 +138,17 @@ def get_movie_recommendations(user_input: str, requirements: dict) -> List[dict]
   for actor in requirements.get("actors", []):
     rule_titles.extend(get_movies_by_actor(actor))
 
+  avoid_titles: List[str] = []
+  if user_id:
+    from app.services.user_signals import get_user_signals
+
+    signals = get_user_signals(user_id)
+    rule_titles.extend(signals["seed_titles"])
+    avoid_titles = signals["avoid_titles"]
+    if signals["genre_weights"] and not genres:
+      requirements = dict(requirements)
+      requirements["genres"] = [g for g, _ in signals["genre_weights"].most_common(2)]
+
   df = get_df()
   rule_titles = [title for title in dict.fromkeys(rule_titles) if title in df["Title"].values]
 
@@ -143,6 +156,7 @@ def get_movie_recommendations(user_input: str, requirements: dict) -> List[dict]
     user_input=user_input,
     requirements=requirements,
     rule_titles=rule_titles,
+    avoid_titles=avoid_titles,
     top_n=5,
   )
 

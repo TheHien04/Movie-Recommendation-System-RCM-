@@ -3,8 +3,6 @@ import type { FormEvent } from 'react'
 import { Shield } from 'lucide-react'
 import { fetchAdminDashboard } from '../lib/api'
 
-const KEY = 'cinemate_admin_key'
-
 type Dashboard = {
   users: number
   watchlist_items: number
@@ -16,7 +14,7 @@ type Dashboard = {
 }
 
 export function Admin() {
-  const [key, setKey] = useState(() => sessionStorage.getItem(KEY) || '')
+  const [key, setKey] = useState('')
   const [input, setInput] = useState('')
   const [data, setData] = useState<Dashboard | null>(null)
   const [error, setError] = useState('')
@@ -32,14 +30,12 @@ export function Admin() {
     } catch {
       setData(null)
       setError('Invalid admin key or server error')
-      sessionStorage.removeItem(KEY)
       setKey('')
     }
   }
 
   function onSubmit(e: FormEvent) {
     e.preventDefault()
-    sessionStorage.setItem(KEY, input.trim())
     setKey(input.trim())
   }
 
@@ -50,6 +46,7 @@ export function Admin() {
           <Shield className="mx-auto mb-4 text-[#f5c518]" size={40} />
           <h1 className="text-2xl font-bold">Admin Dashboard</h1>
           <p className="mt-2 text-sm text-white/50">Enter ADMIN_API_KEY from server environment</p>
+          <p className="mt-1 text-xs text-white/35">Key is kept in memory only (cleared on refresh)</p>
           <form onSubmit={onSubmit} className="mt-6 space-y-3">
             <input
               type="password"
@@ -76,7 +73,7 @@ export function Admin() {
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
         <button
           type="button"
-          onClick={() => { sessionStorage.removeItem(KEY); setKey(''); setData(null) }}
+          onClick={() => { setKey(''); setData(null); setInput('') }}
           className="text-sm text-white/50 hover:text-white"
         >
           Sign out

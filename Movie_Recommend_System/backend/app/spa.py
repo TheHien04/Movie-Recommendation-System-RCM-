@@ -29,6 +29,13 @@ def register_spa(app) -> None:
   def service_worker():
     return send_from_directory(DIST, "sw.js")
 
+  @app.route("/api-endpoint.txt")
+  def api_endpoint():
+    endpoint_file = DIST / "api-endpoint.txt"
+    if endpoint_file.is_file():
+      return send_from_directory(DIST, "api-endpoint.txt")
+    return "https://cinemate-live.onrender.com\n", 200, {"Content-Type": "text/plain"}
+
   @app.get("/<path:path>")
   def spa_catchall(path: str):
     if any(path.startswith(prefix) for prefix in API_PREFIXES):

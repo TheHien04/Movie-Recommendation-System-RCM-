@@ -9,7 +9,16 @@ declare global {
 
 let resolved = ''
 
+function isLocalDev(): boolean {
+  if (import.meta.env.DEV) return true
+  if (typeof window === 'undefined') return false
+  const host = window.location.hostname
+  return host === 'localhost' || host === '127.0.0.1'
+}
+
 export function getApiBase(): string {
+  if (isLocalDev()) return ''
+
   if (resolved) return resolved
   if (typeof window !== 'undefined' && window.__CINEMATE_API__) {
     resolved = window.__CINEMATE_API__
@@ -18,12 +27,10 @@ export function getApiBase(): string {
 
   if (typeof window !== 'undefined') {
     const host = window.location.hostname
-    // Unified Render deploy: API is same origin
     if (host === 'cinemate-live.onrender.com') {
       resolved = window.location.origin
       return resolved
     }
-    // GitHub Pages / other hosts → call unified API
     if (host.endsWith('.github.io') || host.endsWith('.onrender.com')) {
       resolved = DEFAULT_LIVE_API
       return resolved
@@ -36,13 +43,17 @@ export function getApiBase(): string {
     return resolved
   }
 
-  if (import.meta.env.DEV) return ''
-
   resolved = DEFAULT_LIVE_API
   return resolved
 }
 
 export async function initRuntimeApi(): Promise<string> {
+  if (isLocalDev()) {
+    resolved = ''
+    window.__CINEMATE_API__ = ''
+    return ''
+  }
+
   if (resolved) return resolved
 
   try {

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import difflib
 from functools import lru_cache
 
@@ -78,7 +80,7 @@ def _format_explanation(breakdown: dict) -> str:
   )
 
 
-def recommend_movies(user_input: str):
+def recommend_movies(user_input: str, user_id: int | None = None):
   processed_input = preprocess_input(user_input)
   exact_match = find_exact_match(processed_input)
   if exact_match:
@@ -97,7 +99,7 @@ def recommend_movies(user_input: str):
   except Exception:
     requirements = {}
 
-  ranked = get_movie_recommendations(user_input, requirements)
+  ranked = get_movie_recommendations(user_input, requirements, user_id=user_id)
   movie_details_list = []
   for item in ranked:
     title = item["title"] if isinstance(item, dict) else item

@@ -1,6 +1,6 @@
 # Cinemate — Production-Grade ML Movie Platform
 
-[![CI](https://github.com/YOUR_USER/Movie-Recommendation-System-RCM-/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USER/Movie-Recommendation-System-RCM-/actions/workflows/ci.yml)
+[![CI](https://github.com/TheHien04/Movie-Recommendation-System-RCM-/actions/workflows/ci.yml/badge.svg)](https://github.com/TheHien04/Movie-Recommendation-System-RCM-/actions/workflows/ci.yml)
 
 Full-stack movie discovery with **Hybrid ML v2**, **RAG chat**, personalization, A/B testing, MLOps artifacts, and B2B API.
 
@@ -11,12 +11,13 @@ Full-stack movie discovery with **Hybrid ML v2**, **RAG chat**, personalization,
 | Hybrid ML v3 (Transformer + SVD + NeuMF PyTorch) | ✅ |
 | Hyperparameter tuning (grid-search NDCG) | ✅ |
 | MLOps (train script, versioned artifacts, model card) | ✅ |
-| Security (JWT expiry, rate limits, hashed API keys) | ✅ |
+| Security (JWT, auth rate limits, password policy, HSTS/CSP) | ✅ |
 | CI (ruff, pytest 45%+ cov, vitest, Docker build) | ✅ |
 | OpenAPI 3.0 + health probes (live/ready) | ✅ |
 | PWA + SEO meta + error boundary | ✅ |
 | Watchlist (local + cloud sync + batch API) | ✅ |
-| Deploy configs (Render + Vercel + Docker) | ✅ |
+| Deploy (Render unified + Postgres + GH Pages + Docker) | ✅ |
+| Personalization (ratings/watchlist → ML) + chat cloud sync | ✅ |
 
 ## Stack
 
@@ -46,7 +47,7 @@ npm install && npm run dev       # http://127.0.0.1:5173
 ## Tests
 
 ```bash
-# Backend (25 tests)
+# Backend (42+ tests)
 cd Movie_Recommend_System/backend
 pytest -q --cov=app --cov-fail-under=45
 
@@ -72,15 +73,15 @@ docker compose up --build
 
 ## Deploy (Production)
 
-### API — Render
-1. Connect GitHub repo on [Render](https://render.com)
-2. Use `render.yaml` (auto-detected)
-3. Set env: `TMDB_API_KEY`, `CORS_ORIGINS`, `ADMIN_API_KEY`
+### Unified app — Render (recommended)
+1. Connect repo on [Render](https://render.com) and **Manual Sync** `render.yaml`
+2. Live URL: **https://cinemate-live.onrender.com** (API + SPA same origin)
+3. Set secrets in Render dashboard: `TMDB_API_KEY`, optional `OPENAI_API_KEY`, `DATABASE_URL`
 
-### Frontend — Vercel
-1. Import repo, root: `Movie_Recommend_System/web`
-2. Set `VITE_API_URL=https://your-api.onrender.com`
-3. Deploy
+### Frontend — GitHub Pages (optional static mirror)
+- **https://thehien04.github.io/Movie-Recommendation-System-RCM-/**
+- Enable Pages → branch `gh-pages` in repo Settings
+- Static build calls API at `cinemate-live.onrender.com` via `runtime-api.ts`
 
 ### Docker
 ```bash
@@ -90,6 +91,8 @@ docker run -p 5001:5001 -e TMDB_API_KEY=xxx cinemate-api
 
 ## Documentation
 
+- [DEPLOY.md](DEPLOY.md) — Production deploy checklist
+- [RESULTS.md](RESULTS.md) — Offline eval & personalization notes
 - [MODEL_CARD.md](MODEL_CARD.md) — ML model documentation
 - [SECURITY.md](SECURITY.md) — Security policy
 - [CONTRIBUTING.md](CONTRIBUTING.md) — Dev workflow

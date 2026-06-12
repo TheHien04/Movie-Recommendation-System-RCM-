@@ -68,7 +68,15 @@ export function Profile() {
             <button type="button" onClick={() => setMode('register')} className={`flex-1 rounded-xl py-2 ${mode === 'register' ? 'bg-[#f5c518] text-black' : 'bg-white/10'}`}>Register</button>
           </div>
           <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email" className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3" required />
-          <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Password" className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3" required />
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="password"
+            placeholder={mode === 'register' ? 'Min 8 chars, letter + number' : 'Password'}
+            minLength={mode === 'register' ? 8 : undefined}
+            className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3"
+            required
+          />
           {error && <p className="text-red-300 text-sm">{error}</p>}
           <button type="submit" className="w-full rounded-xl bg-[#f5c518] py-3 font-semibold text-black">{mode === 'login' ? 'Sign In' : 'Create Account'}</button>
         </form>

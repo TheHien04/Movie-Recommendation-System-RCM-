@@ -1,10 +1,7 @@
-"""Personalized recommendations from user events and watchlist."""
-import json
-from collections import Counter
-
+"""Personalized recommendations from user events, watchlist, and ratings."""
 from app.data.movie_repository import get_dataframe
 from app.ml.hybrid import HybridRecommender
-from app.models import UserEvent, WatchlistItem
+from app.services.user_signals import get_user_signals
 
 
 def get_personalized_feed(user_id=None, limit: int = 8) -> list:
@@ -15,44 +12,59 @@ def get_personalized_feed(user_id=None, limit: int = 8) -> list:
     top = df.nlargest(limit, "imdbRating")
     return [_row_to_card(row) for _, row in top.iterrows()]
 
-  watch_titles = [w.movie_title for w in WatchlistItem.query.filter_by(user_id=user_id).all()]
-  events = UserEvent.query.filter_by(user_id=user_id).order_by(UserEvent.created_at.desc()).limit(50).all()
-  clicked = [e.movie_title for e in events if e.movie_title and e.event_type in ("click", "view", "save")]
+  signals = get_user_signals(user_id)
+  genre_weights = signals["genre_weights"]
 
-  genre_counter: Counter = Counter()
-  for title in watch_titles + clicked:
-    row = df[df["Title"] == title]
-    if row.empty:
-      continue
-    for g in str(row.iloc[0]["Genre"]).split(","):
-      genre_counter[g.strip().lower()] += 1
-
-  if not genre_counter:
+  if not genre_weights and not signals["seed_titles"]:
     top = df.nlargest(limit, "imdbRating")
     return [_row_to_card(row) for _, row in top.iterrows()]
 
-  top_genre = genre_counter.most_common(1)[0][0]
-  query = f"best {top_genre} movies"
-  ranked = hybrid.recommend(query, requirements={"genres": [top_genre]}, rule_titles=watch_titles[:5], top_n=limit)
+  if genre_weights:
+    top_genres = [g for g, _ in genre_weights.most_common(2)]
+    query = f"best {' and '.join(top_genres)} movies"
+    requirements = {"genres": top_genres}
+  else:
+    query = "movies similar to my favorites"
+    requirements = {}
+
+  ranked = hybrid.recommend(
+    query,
+    requirements=requirements,
+    rule_titles=signals["seed_titles"][:8],
+    avoid_titles=signals["avoid_titles"],
+    top_n=limit + len(signals["avoid_titles"]),
+  )
 
   cards = []
+  avoid = set(signals["avoid_titles"])
   for item in ranked:
-    row = df[df["Title"] == item["title"]]
+    title = item["title"]
+    if title in avoid:
+      continue
+    row = df[df["Title"] == title]
     if row.empty:
       continue
     card = _row_to_card(row.iloc[0])
     card["personalized"] = True
-    card["explanation"] = item.get("explanation", "Based on your watchlist and browsing history.")
+    card["explanation"] = item.get("explanation", "Based on your ratings, watchlist, and browsing.")
     cards.append(card)
+    if len(cards) >= limit:
+      break
+
+  if not cards:
+    top = df.nlargest(limit, "imdbRating")
+    return [_row_to_card(row) for _, row in top.iterrows()]
+
   return cards
 
 
 def _row_to_card(row) -> dict:
+  year = row.get("Year")
   return {
     "title": row["Title"],
     "poster": row.get("Poster_Link"),
     "genre": row.get("Genre"),
     "imdb_rating": float(row.get("imdbRating") or 0),
     "description": row.get("Overview"),
-    "year": row.get("Year"),
+    "year": int(year) if year is not None and str(year) != "nan" else None,
   }

@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import { Send, LoaderCircle, ThumbsUp, ThumbsDown, Sparkles } from 'lucide-react'
-import { fetchRecommendations, submitFeedback } from '../lib/api'
+import { Send, LoaderCircle, ThumbsUp, ThumbsDown, Sparkles, Cloud } from 'lucide-react'
+import { fetchChatHistory, fetchRecommendations, saveChatMessage, submitFeedback } from '../lib/api'
 import type { Recommendation } from '../lib/api'
+import { getToken } from '../lib/auth'
 import { MovieCard } from '../components/MovieCard'
 
 type Message = {
@@ -14,15 +15,18 @@ type Message = {
   query?: string
 }
 
+const WELCOME: Message = {
+  role: 'assistant',
+  text: 'Tell me what you want to watch — genre, actor, director, mood, or plot keywords.',
+}
+
 export function Chat() {
   const [params] = useSearchParams()
   const [input, setInput] = useState('')
   const [mode, setMode] = useState<'hybrid' | 'rag'>('hybrid')
-  const [messages, setMessages] = useState<Message[]>([{
-    role: 'assistant',
-    text: 'Tell me what you want to watch — genre, actor, director, mood, or plot keywords.',
-  }])
+  const [messages, setMessages] = useState<Message[]>([WELCOME])
   const [loading, setLoading] = useState(false)
+  const [synced, setSynced] = useState(false)
   const bootstrapped = useRef(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -32,6 +36,22 @@ export function Chat() {
   }, [messages, loading])
 
   useEffect(() => {
+    if (!getToken()) return
+    fetchChatHistory()
+      .then((history) => {
+        if (!history.length) return
+        const restored: Message[] = history.map((m) => ({
+          role: m.role,
+          text: m.content,
+          movies: m.movies?.length ? m.movies : undefined,
+        }))
+        setMessages(restored)
+        setSynced(true)
+      })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
     const q = params.get('q')
     if (q && !bootstrapped.current) {
       bootstrapped.current = true
@@ -39,24 +59,43 @@ export function Chat() {
     }
   }, [params])
 
+  async function persistMessage(message: Message) {
+    if (!getToken()) return
+    try {
+      await saveChatMessage({
+        role: message.role,
+        content: message.text,
+        movies: message.movies,
+      })
+      setSynced(true)
+    } catch {
+      /* local session still works */
+    }
+  }
+
   async function submitQuery(query: string) {
     if (!query.trim()) return
-    setMessages((prev) => [...prev, { role: 'user', text: query }])
+    const userMessage: Message = { role: 'user', text: query }
+    setMessages((prev) => [...prev, userMessage])
+    void persistMessage(userMessage)
     setLoading(true)
     try {
       const data = await fetchRecommendations(query, mode)
-      setMessages((prev) => [...prev, {
+      const assistantMessage: Message = {
         role: 'assistant',
-        text: data.answer || `Top picks from ${data.model} (variant ${data.variant || 'A'}).`,
+        text: data.answer || `Top picks from ${data.model}${data.personalized ? ' (personalized)' : ''} (variant ${data.variant || 'A'}).`,
         movies: data.recommended_movies,
         variant: data.variant,
         query,
-      }])
+      }
+      setMessages((prev) => [...prev, assistantMessage])
+      void persistMessage(assistantMessage)
     } catch {
-      setMessages((prev) => [...prev, {
+      const errorMessage: Message = {
         role: 'assistant',
         text: 'Could not reach the API. Ensure backend is running on port 5001.',
-      }])
+      }
+      setMessages((prev) => [...prev, errorMessage])
     } finally {
       setLoading(false)
       setInput('')
@@ -78,6 +117,11 @@ export function Chat() {
         <div>
           <h1 className="text-4xl font-bold">AI Recommendation Chat</h1>
           <p className="text-white/60">Hybrid ML + optional RAG mode with A/B variants</p>
+          {getToken() && synced && (
+            <p className="mt-1 inline-flex items-center gap-1 text-xs text-emerald-300/80">
+              <Cloud size={12} /> Chat synced to your account
+            </p>
+          )}
         </div>
         <div className="flex rounded-full bg-white/10 p-1">
           <button type="button" onClick={() => setMode('hybrid')} className={`rounded-full px-4 py-2 text-sm ${mode === 'hybrid' ? 'bg-[#f5c518] text-black' : ''}`}>Hybrid</button>

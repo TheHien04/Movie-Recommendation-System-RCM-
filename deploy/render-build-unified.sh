@@ -11,6 +11,8 @@ npm ci
 VITE_API_URL= npm run build
 cp dist/index.html dist/404.html
 touch dist/.nojekyll
+# Same-origin API on Render; GH Pages static mirror reads this file
+printf '%s\n' 'https://cinemate-live.onrender.com' > dist/api-endpoint.txt
 
 echo "=== Verify ML artifacts ==="
 cd ../backend

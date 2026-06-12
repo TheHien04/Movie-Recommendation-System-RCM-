@@ -7,7 +7,7 @@ from app.ml.hybrid import HybridRecommender
 from app.ml.metrics import evaluate_ranking
 
 TEST_CASES = Path(__file__).resolve().parents[2] / "data" / "test_cases.json"
-MIN_AVG_NDCG = 0.08
+MIN_AVG_NDCG = 0.10
 K = 5
 
 

@@ -8,6 +8,16 @@ from app.config.settings import settings
 db = SQLAlchemy()
 
 
+def _database_uri() -> str:
+  url = settings.DATABASE_URL
+  if not url:
+    db_path = os.path.join(os.path.dirname(__file__), "../data/cinemate.db")
+    return f"sqlite:///{db_path}"
+  if url.startswith("postgres://"):
+    url = url.replace("postgres://", "postgresql://", 1)
+  return url
+
+
 def _upgrade_schema():
   """Lightweight SQLite migrations for additive schema changes."""
   inspector = inspect(db.engine)
@@ -25,9 +35,14 @@ def _upgrade_schema():
 
 
 def init_db(app):
-  db_path = os.path.join(os.path.dirname(__file__), "../data/cinemate.db")
-  app.config["SQLALCHEMY_DATABASE_URI"] = settings.DATABASE_URL or f"sqlite:///{db_path}"
+  uri = _database_uri()
+  app.config["SQLALCHEMY_DATABASE_URI"] = uri
   app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+  if uri.startswith("postgresql"):
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+      "pool_pre_ping": True,
+      "pool_recycle": 300,
+    }
   app.config["SECRET_KEY"] = settings.SECRET_KEY
   db.init_app(app)
   with app.app_context():

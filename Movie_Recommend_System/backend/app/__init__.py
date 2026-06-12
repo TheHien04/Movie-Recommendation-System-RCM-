@@ -3,7 +3,7 @@ import os
 from flask import Flask
 from flask_cors import CORS
 
-from app.config.settings import settings
+from app.config.settings import settings, validate_production_config
 from app.errors import register_error_handlers
 from app.logging_config import configure_logging
 from app.middleware.request_context import register_request_hooks
@@ -11,8 +11,13 @@ from app.middleware.request_context import register_request_hooks
 
 def create_app():
   configure_logging(settings.ENV)
+  validate_production_config()
   app = Flask(__name__)
-  if os.getenv("ALLOW_ALL_CORS", "").lower() in ("1", "true", "yes"):
+  # ALLOW_ALL_CORS is dev-only escape hatch; never enable in production deploy configs.
+  if (
+    settings.ENV != "production"
+    and os.getenv("ALLOW_ALL_CORS", "").lower() in ("1", "true", "yes")
+  ):
     CORS(app, resources={r"/*": {"origins": "*"}})
   else:
     CORS(app, resources={r"/*": {"origins": settings.CORS_ORIGINS}}, supports_credentials=True)

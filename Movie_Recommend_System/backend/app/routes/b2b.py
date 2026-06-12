@@ -41,7 +41,7 @@ def b2b_recommend():
   return jsonify({
     "recommended_movies": recommend_movies(query),
     "api_owner": key.owner,
-    "model_version": "hybrid-v2",
+    "model_version": "hybrid-v3",
   })
 
 

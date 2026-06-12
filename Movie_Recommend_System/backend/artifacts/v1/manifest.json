@@ -601,15 +601,15 @@
     "rating": 0.09523809523809525,
     "popularity_penalty": 0.03571428571428571
   },
-  "tuned_ndcg": 0.0962,
+  "tuned_ndcg": 0.111,
   "validation_warnings": [
     "1 duplicate titles detected"
   ],
   "offline_eval": {
     "avg_precision@5": 0.07,
-    "avg_recall@5": 0.0958,
-    "avg_ndcg@5": 0.0962,
-    "avg_map": 0.0575,
+    "avg_recall@5": 0.0867,
+    "avg_ndcg@5": 0.111,
+    "avg_map": 0.0679,
     "eval_cases": 20
   },
   "ml_stack": [

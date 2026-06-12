@@ -77,10 +77,12 @@ class HybridRecommender:
     user_input: str,
     requirements: Optional[dict] = None,
     rule_titles: Optional[List[str]] = None,
+    avoid_titles: Optional[List[str]] = None,
     top_n: int = 5,
   ) -> List[dict]:
     requirements = requirements or {}
     rule_titles = rule_titles or []
+    avoid = set(avoid_titles or [])
     weights = load_hybrid_weights()
     df = get_dataframe()
 
@@ -105,8 +107,9 @@ class HybridRecommender:
     relevance: Dict[str, float] = {}
     breakdowns: Dict[str, dict] = {}
 
+    user_boost = 0.12
     for title in candidates:
-      if title not in df["Title"].values:
+      if title not in df["Title"].values or title in avoid:
         continue
 
       rule_score = 1.0 if title in rule_titles else 0.0
@@ -121,6 +124,7 @@ class HybridRecommender:
         + weights.get("rule", 0) * rule_score
         + weights.get("rating", 0) * rating_score
         - weights.get("popularity_penalty", 0) * pop_penalty
+        + user_boost * rule_score
       )
 
       relevance[title] = max(final_score, 0)

@@ -2,7 +2,7 @@
 import hashlib
 
 VARIANTS = {
-  "A": "hybrid-v2",
+  "A": "hybrid-v3",
   "B": "rag-v1",
 }
 

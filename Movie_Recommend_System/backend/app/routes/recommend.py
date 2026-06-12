@@ -16,7 +16,7 @@ def _model_meta() -> dict:
   if artifact_store.artifacts_available():
     manifest = artifact_store.load_manifest()
     return {"model_version": manifest.get("version"), "model_family": manifest.get("model_family")}
-  return {"model_version": "runtime-fit", "model_family": "hybrid-v2"}
+  return {"model_version": "runtime-fit", "model_family": "hybrid-v3"}
 
 
 @recommend_bp.route("/recommend", methods=["POST"])
@@ -44,9 +44,11 @@ def recommend():
       **meta,
     })
 
+  user_id = getattr(g, "user_id", None)
   return jsonify({
-    "recommended_movies": recommend_movies(user_input),
+    "recommended_movies": recommend_movies(user_input, user_id=user_id),
     "model": "hybrid-v3",
+    "personalized": bool(user_id),
     "variant": "A",
     "engines": hybrid_recommender.engines,
     **meta,

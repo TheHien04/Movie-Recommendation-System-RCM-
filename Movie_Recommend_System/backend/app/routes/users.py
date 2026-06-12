@@ -79,7 +79,7 @@ def save_chat():
 @users_bp.route("/api/users/profile", methods=["GET"])
 @login_required
 def profile():
-  user = User.query.get(g.user_id)
+  user = db.session.get(User, g.user_id)
   watch_count = WatchlistItem.query.filter_by(user_id=g.user_id).count()
   chat_count = ChatMessage.query.filter_by(user_id=g.user_id).count()
   rating_count = UserRating.query.filter_by(user_id=g.user_id).count()

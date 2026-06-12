@@ -3,10 +3,10 @@ import { getApiBase } from '../lib/config'
 
 async function checkHealth(): Promise<boolean> {
   const base = getApiBase()
-
+  const isLocal = !base
   const url = `${base}/api/health/live`
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 90_000)
+  const timer = setTimeout(() => controller.abort(), isLocal ? 5_000 : 90_000)
   try {
     const res = await fetch(url, { signal: controller.signal })
     return res.ok
@@ -41,7 +41,7 @@ export function BackendStatus() {
     return (
       <span className="hidden items-center gap-2 rounded-full bg-amber-500/15 px-3 py-1 text-xs text-amber-200 md:inline-flex">
         <span className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />
-        Waking API…
+        {getApiBase() ? 'Waking API…' : 'Checking API…'}
       </span>
     )
   }

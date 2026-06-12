@@ -55,7 +55,7 @@ def _health_payload() -> dict:
     "openai_configured": bool(settings.OPENAI_API_KEY),
     "tmdb_configured": bool(settings.TMDB_API_KEY),
     "model_version": manifest.get("version") if manifest else "runtime-fit",
-    "model_family": manifest.get("model_family") if manifest else "hybrid-v2",
+    "model_family": manifest.get("model_family") if manifest else "hybrid-v3",
     "checks": {
       "database": db_ok,
       "dataset": dataset_ok,

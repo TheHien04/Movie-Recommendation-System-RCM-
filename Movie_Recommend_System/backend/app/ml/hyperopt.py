@@ -32,8 +32,9 @@ def tune_hybrid_weights(k: int = 5, max_trials: int = 24) -> Dict[str, float]:
   cases = json.loads(TEST_CASES.read_text(encoding="utf-8"))
 
   set_hybrid_weights(dict(DEFAULT_WEIGHTS))
+  default_ndcg = _avg_ndcg(cases, k)
   best_weights = dict(DEFAULT_WEIGHTS)
-  best_ndcg = _avg_ndcg(cases, k)
+  best_ndcg = default_ndcg
 
   grid = {
     "semantic": [0.32, 0.35, 0.38],
@@ -56,6 +57,11 @@ def tune_hybrid_weights(k: int = 5, max_trials: int = 24) -> Dict[str, float]:
     if avg > best_ndcg:
       best_ndcg = avg
       best_weights = deepcopy(normalized)
+
+  if best_ndcg < default_ndcg:
+    set_hybrid_weights(dict(DEFAULT_WEIGHTS))
+    best_weights = dict(DEFAULT_WEIGHTS)
+    best_ndcg = default_ndcg
 
   set_hybrid_weights(best_weights)
   result = dict(best_weights)

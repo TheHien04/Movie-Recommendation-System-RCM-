@@ -26,10 +26,12 @@ def rag_chat():
     return jsonify(result)
 
   from app.services.top5movie_service import recommend_movies
-  movies = recommend_movies(query)
+  user_id = getattr(g, "user_id", None)
+  movies = recommend_movies(query, user_id=user_id)
   return jsonify({
     "answer": "Hybrid model recommendations based on your request.",
     "recommended_movies": movies,
-    "model": "hybrid-v2",
+    "model": "hybrid-v3",
+    "personalized": bool(user_id),
     "variant": "A",
   })

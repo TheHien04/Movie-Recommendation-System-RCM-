@@ -160,6 +160,7 @@ export async function fetchRecommendations(query: string, mode?: 'rag' | 'hybrid
     model: string
     variant?: string
     answer?: string
+    personalized?: boolean
     engines: Record<string, string>
   }>('/recommend', {
     method: 'POST',
@@ -214,4 +215,30 @@ export async function syncWatchlistCloud(titles: string[]) {
 
 export async function getCloudWatchlist() {
   return request<{ watchlist: string[] }>('/api/users/watchlist')
+}
+
+export type ChatHistoryMessage = {
+  role: 'user' | 'assistant'
+  content: string
+  movies: Recommendation[]
+  created_at?: string
+}
+
+export async function fetchChatHistory() {
+  return request<{ messages: ChatHistoryMessage[] }>('/api/users/chat').then((d) => d.messages)
+}
+
+export async function saveChatMessage(payload: {
+  role: 'user' | 'assistant'
+  content: string
+  movies?: Recommendation[]
+}) {
+  return request('/api/users/chat', {
+    method: 'POST',
+    body: JSON.stringify({
+      role: payload.role,
+      content: payload.content,
+      movies: payload.movies ?? [],
+    }),
+  })
 }

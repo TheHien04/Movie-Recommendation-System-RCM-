@@ -12,7 +12,7 @@ from app.config.settings import settings
 _buckets: dict[str, deque[float]] = defaultdict(deque)
 
 
-def _client_ip() -> str:
+def client_ip() -> str:
   forwarded = request.headers.get("X-Forwarded-For", "")
   if forwarded:
     return forwarded.split(",")[0].strip()
@@ -29,7 +29,7 @@ def rate_limit(max_requests: int | None = None, window_sec: int | None = None):
       if request.environ.get("werkzeug.server.testing"):
         return f(*args, **kwargs)
 
-      ip = _client_ip()
+      ip = client_ip()
       now = time.time()
       bucket = _buckets[ip]
       while bucket and now - bucket[0] > window:
